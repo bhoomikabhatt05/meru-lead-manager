@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { LEAD_SOURCES, LEAD_STATUSES, validateLeadForm } from '../utils';
 import { CloseIcon, BuildingIcon, MailIcon, PhoneIcon } from './Icons';
 
@@ -15,37 +15,67 @@ const EMPTY_FORM = {
 export function LeadForm({ lead, onSubmit, onClose, loading }) {
   const isEdit = Boolean(lead);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [initialForm, setInitialForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+
+  const nameInputRef = useRef(null);
 
   useEffect(() => {
-    if (lead) {
-      setForm({
-        name: lead.name || '',
-        email: lead.email || '',
-        phone: lead.phone || '',
-        company: lead.company || '',
-        source: lead.source || '',
-        status: lead.status || 'New',
-        notes: lead.notes || '',
-      });
-    } else {
-      setForm(EMPTY_FORM);
-    }
+    const loadedData = lead
+      ? {
+          name: lead.name || '',
+          email: lead.email || '',
+          phone: lead.phone || '',
+          company: lead.company || '',
+          source: lead.source || '',
+          status: lead.status || 'New',
+          notes: lead.notes || '',
+        }
+      : EMPTY_FORM;
+
+    setForm(loadedData);
+    setInitialForm(loadedData);
     setErrors({});
     setServerError('');
+    setShowDiscardConfirm(false);
+
+    // Auto-focus first input
+    setTimeout(() => {
+      nameInputRef.current?.focus();
+    }, 50);
   }, [lead]);
 
-  // Handle ESC key to close modal
+  // Check if form is dirty
+  const isDirty = JSON.stringify(form) !== JSON.stringify(initialForm);
+
+  // Safe close handler that checks for unsaved changes
+  const handleRequestClose = () => {
+    if (loading) return;
+    if (isDirty) {
+      setShowDiscardConfirm(true);
+    } else {
+      onClose();
+    }
+  };
+
+  // Handle ESC key to safely close modal
   useEffect(() => {
     function handleKeyDown(e) {
       if (e.key === 'Escape' && !loading) {
-        onClose();
+        if (showDiscardConfirm) {
+          setShowDiscardConfirm(false);
+        } else if (isDirty) {
+          setShowDiscardConfirm(true);
+        } else {
+          onClose();
+        }
       }
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose, loading]);
+  }, [onClose, loading, isDirty, showDiscardConfirm]);
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -83,7 +113,7 @@ export function LeadForm({ lead, onSubmit, onClose, loading }) {
   }
 
   return (
-    <div className="modal-backdrop-blur" onClick={onClose} role="dialog" aria-modal="true">
+    <div className="modal-backdrop-blur" onClick={handleRequestClose} role="dialog" aria-modal="true">
       <div className="lead-modal-drawer" onClick={(e) => e.stopPropagation()}>
         {/* Modal Header */}
         <div className="modal-top-bar">
@@ -97,7 +127,7 @@ export function LeadForm({ lead, onSubmit, onClose, loading }) {
           </div>
           <button
             className="btn-modal-close"
-            onClick={onClose}
+            onClick={handleRequestClose}
             disabled={loading}
             aria-label="Close dialog"
           >
@@ -125,6 +155,7 @@ export function LeadForm({ lead, onSubmit, onClose, loading }) {
                     Full Name <span className="req-star">*</span>
                   </label>
                   <input
+                    ref={nameInputRef}
                     id="lead-name"
                     name="name"
                     type="text"
@@ -132,7 +163,6 @@ export function LeadForm({ lead, onSubmit, onClose, loading }) {
                     placeholder="e.g. Maya Sharma"
                     value={form.name}
                     onChange={handleChange}
-                    autoFocus={!isEdit}
                   />
                   {errors.name && <span className="field-error-hint">{errors.name}</span>}
                 </div>
@@ -246,9 +276,12 @@ export function LeadForm({ lead, onSubmit, onClose, loading }) {
               </div>
             </div>
 
-            {/* Section 3: Notes */}
+            {/* Section 3: Notes & Character Count */}
             <div className="form-section-card">
-              <span className="section-label">NOTES & CONTEXT</span>
+              <div className="section-header-flex">
+                <span className="section-label">NOTES & CONTEXT</span>
+                <span className="char-counter">{form.notes.length} / 500</span>
+              </div>
               <div className="form-field-group">
                 <label className="field-label" htmlFor="lead-notes">
                   Additional Notes (Optional)
@@ -258,6 +291,7 @@ export function LeadForm({ lead, onSubmit, onClose, loading }) {
                   name="notes"
                   className="textarea-input-field"
                   rows="3"
+                  maxLength="500"
                   placeholder="Record discovery call notes, requirements, budget expectations, or follow-up timelines…"
                   value={form.notes}
                   onChange={handleChange}
@@ -271,7 +305,7 @@ export function LeadForm({ lead, onSubmit, onClose, loading }) {
             <button
               type="button"
               className="btn-modal-cancel"
-              onClick={onClose}
+              onClick={handleRequestClose}
               disabled={loading}
             >
               Cancel
@@ -294,6 +328,37 @@ export function LeadForm({ lead, onSubmit, onClose, loading }) {
             </button>
           </div>
         </form>
+
+        {/* Apple HIG Unsaved Changes Confirmation Sheet */}
+        {showDiscardConfirm && (
+          <div className="discard-prompt-overlay" onClick={() => setShowDiscardConfirm(false)}>
+            <div className="discard-prompt-card" onClick={(e) => e.stopPropagation()}>
+              <h3 className="discard-title">Discard unsaved changes?</h3>
+              <p className="discard-message">
+                You have unsaved changes on this lead record. If you leave now, your edits will not be saved.
+              </p>
+              <div className="discard-actions">
+                <button
+                  type="button"
+                  className="btn-discard-secondary"
+                  onClick={() => setShowDiscardConfirm(false)}
+                >
+                  Keep Editing
+                </button>
+                <button
+                  type="button"
+                  className="btn-discard-danger"
+                  onClick={() => {
+                    setShowDiscardConfirm(false);
+                    onClose();
+                  }}
+                >
+                  Discard Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

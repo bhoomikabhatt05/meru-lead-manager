@@ -5,14 +5,14 @@ import { ArrowUpRight, BuildingIcon, PlusIcon } from './Icons';
 
 const STATUS_CONFIG = {
   New: { label: 'New', color: '#3b82f6', bg: '#eff6ff', border: '#bfdbfe' },
-  Contacted: { label: 'Contacted', color: '#f59e0b', bg: '#fefce8', border: '#fef08a' },
-  Qualified: { label: 'Qualified', color: '#10b981', bg: '#f0fdf4', border: '#bbf7d0' },
-  Lost: { label: 'Lost', color: '#ef4444', bg: '#fef2f2', border: '#fecaca' },
+  Contacted: { label: 'Contacted', color: '#f59e0b', border: '#fef08a' },
+  Qualified: { label: 'Qualified', color: '#10b981', border: '#bbf7d0' },
+  Lost: { label: 'Lost', color: '#ef4444', border: '#fecaca' },
 };
 
 const ORDERED_STATUSES = ['New', 'Contacted', 'Qualified', 'Lost'];
 
-export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead }) {
+export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead, onSelectLead }) {
   const [stats, setStats] = useState(null);
   const [recentLeads, setRecentLeads] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -101,14 +101,36 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead }) {
     };
   });
 
+  // Direct manipulation helper for KPI navigation
+  const handleKpiClick = (statusFilter = '') => {
+    if (onNavigateToLeads) {
+      onNavigateToLeads({ status: statusFilter, source: '', search: '' });
+    }
+  };
+
+  const handleSourceClick = (sourceFilter) => {
+    if (onNavigateToLeads) {
+      onNavigateToLeads({ source: sourceFilter, status: '', search: '' });
+    }
+  };
+
   return (
     <div className="dashboard-container">
-      {/* KPI Highlight Cards */}
+      {/* KPI Highlight Cards - Fully Interactive per Apple HIG */}
       <div className="kpi-grid">
-        <div className="kpi-card highlight">
+        {/* Card 1: Total Leads */}
+        <div
+          className="kpi-card highlight interactive"
+          onClick={() => handleKpiClick('')}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleKpiClick('')}
+          role="button"
+          tabIndex={0}
+          aria-label={`Total leads: ${total}. Click to view all leads with filters cleared.`}
+          title="Click to view all leads"
+        >
           <div className="kpi-header">
             <span className="kpi-label">TOTAL LEADS</span>
-            <span className="kpi-trend neutral">All Time</span>
+            <span className="kpi-action-hint">View all →</span>
           </div>
           <div className="kpi-value-wrap">
             <span className="kpi-value">{total}</span>
@@ -119,7 +141,16 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead }) {
           </div>
         </div>
 
-        <div className="kpi-card">
+        {/* Card 2: New Leads */}
+        <div
+          className="kpi-card interactive"
+          onClick={() => handleKpiClick('New')}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleKpiClick('New')}
+          role="button"
+          tabIndex={0}
+          aria-label={`New leads: ${newCount}. Click to view new leads.`}
+          title="Click to filter by New status"
+        >
           <div className="kpi-header">
             <span className="kpi-label">NEW LEADS</span>
             <span className="status-pill-indicator new">New</span>
@@ -134,7 +165,16 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead }) {
           </div>
         </div>
 
-        <div className="kpi-card">
+        {/* Card 3: Contacted */}
+        <div
+          className="kpi-card interactive"
+          onClick={() => handleKpiClick('Contacted')}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleKpiClick('Contacted')}
+          role="button"
+          tabIndex={0}
+          aria-label={`Contacted leads: ${contactedCount}. Click to view contacted leads.`}
+          title="Click to filter by Contacted status"
+        >
           <div className="kpi-header">
             <span className="kpi-label">CONTACTED</span>
             <span className="status-pill-indicator contacted">Contacted</span>
@@ -149,7 +189,16 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead }) {
           </div>
         </div>
 
-        <div className="kpi-card">
+        {/* Card 4: Qualified */}
+        <div
+          className="kpi-card interactive"
+          onClick={() => handleKpiClick('Qualified')}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleKpiClick('Qualified')}
+          role="button"
+          tabIndex={0}
+          aria-label={`Qualified leads: ${qualifiedCount}. Click to view qualified leads.`}
+          title="Click to filter by Qualified status"
+        >
           <div className="kpi-header">
             <span className="kpi-label">QUALIFIED</span>
             <span className="status-pill-indicator qualified">Qualified</span>
@@ -164,14 +213,23 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead }) {
           </div>
         </div>
 
-        <div className="kpi-card">
+        {/* Card 5: Lost */}
+        <div
+          className="kpi-card interactive"
+          onClick={() => handleKpiClick('Lost')}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleKpiClick('Lost')}
+          role="button"
+          tabIndex={0}
+          aria-label={`Lost leads: ${lostCount}. Click to view lost leads.`}
+          title="Click to filter by Lost status"
+        >
           <div className="kpi-header">
             <span className="kpi-label">LOST</span>
             <span className="status-pill-indicator lost">Lost</span>
           </div>
           <div className="kpi-value-wrap">
             <span className="kpi-value text-rose">{lostCount}</span>
-            <span className="kpi-subtext">Disqualified or churned</span>
+            <span className="kpi-subtext">Disqualified / closed</span>
           </div>
           <div className="kpi-sub-meter">
             <span className="meter-label">Loss Rate</span>
@@ -182,12 +240,12 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead }) {
 
       {/* Analytics Visualizations Grid */}
       <div className="analytics-grid">
-        {/* Status Distribution Donut Chart */}
+        {/* Status Distribution Donut Chart - Clickable Segments & Legend */}
         <div className="analytics-card">
           <div className="card-top-bar">
             <div>
               <h3 className="card-title">Status Distribution</h3>
-              <p className="card-subtitle">Breakdown of leads by current pipeline stage</p>
+              <p className="card-subtitle">Click any segment or stage to filter the pipeline</p>
             </div>
             <span className="card-badge">{total} Leads</span>
           </div>
@@ -215,7 +273,7 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead }) {
                     strokeWidth="18"
                   />
 
-                  {/* Dynamic Arc Segments */}
+                  {/* Dynamic Arc Segments - Clickable */}
                   {donutSegments.map((seg) => {
                     if (seg.count === 0) return null;
                     const isHovered = activeHoverSlice?.statusKey === seg.statusKey;
@@ -227,27 +285,35 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead }) {
                         r={radius}
                         fill="transparent"
                         stroke={seg.color}
-                        strokeWidth={isHovered ? 22 : 18}
+                        strokeWidth={isHovered ? 24 : 18}
                         strokeDasharray={seg.strokeDasharray}
                         strokeDashoffset={seg.strokeDashoffset}
                         strokeLinecap="butt"
-                        className="donut-segment"
+                        className="donut-segment interactive-slice"
+                        onClick={() => handleKpiClick(seg.statusKey)}
                         onMouseEnter={() => setActiveHoverSlice(seg)}
                         onMouseLeave={() => setActiveHoverSlice(null)}
+                        role="button"
+                        aria-label={`${seg.label}: ${seg.count} leads (${seg.percent}%). Click to filter.`}
                       />
                     );
                   })}
                 </svg>
 
                 {/* Donut Center Display */}
-                <div className="donut-center-info">
+                <div
+                  className="donut-center-info interactive-center"
+                  onClick={() => handleKpiClick('')}
+                  title="Click to view all leads"
+                  style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+                >
                   {activeHoverSlice ? (
                     <>
                       <span className="donut-center-count" style={{ color: activeHoverSlice.color }}>
                         {activeHoverSlice.count}
                       </span>
                       <span className="donut-center-label">{activeHoverSlice.label}</span>
-                      <span className="donut-center-percent">{activeHoverSlice.percent}%</span>
+                      <span className="donut-center-percent">{activeHoverSlice.percent}% (Click)</span>
                     </>
                   ) : (
                     <>
@@ -259,14 +325,20 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead }) {
                 </div>
               </div>
 
-              {/* Status Legend List */}
+              {/* Status Legend List - Clickable */}
               <div className="donut-legend-list">
                 {donutSegments.map((seg) => (
                   <div
                     key={seg.statusKey}
-                    className={`legend-item ${activeHoverSlice?.statusKey === seg.statusKey ? 'hovered' : ''}`}
+                    className={`legend-item interactive ${activeHoverSlice?.statusKey === seg.statusKey ? 'hovered' : ''}`}
+                    onClick={() => handleKpiClick(seg.statusKey)}
                     onMouseEnter={() => setActiveHoverSlice(seg)}
                     onMouseLeave={() => setActiveHoverSlice(null)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleKpiClick(seg.statusKey)}
+                    aria-label={`Filter by ${seg.label}: ${seg.count} leads`}
+                    title={`Filter leads by ${seg.label}`}
                   >
                     <div className="legend-item-left">
                       <span className="legend-dot" style={{ backgroundColor: seg.color }} />
@@ -275,6 +347,7 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead }) {
                     <div className="legend-item-right">
                       <span className="legend-count">{seg.count}</span>
                       <span className="legend-percent">{seg.percent}%</span>
+                      <span className="legend-arrow">→</span>
                     </div>
                   </div>
                 ))}
@@ -283,12 +356,12 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead }) {
           )}
         </div>
 
-        {/* Acquisition Sources Bar Chart */}
+        {/* Acquisition Sources Bar Chart - Clickable Rows */}
         <div className="analytics-card">
           <div className="card-top-bar">
             <div>
               <h3 className="card-title">Acquisition Channels</h3>
-              <p className="card-subtitle">Lead volume generated by acquisition source</p>
+              <p className="card-subtitle">Click any channel to view leads from that source</p>
             </div>
             <span className="card-badge">{bySource.length} Sources</span>
           </div>
@@ -303,9 +376,21 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead }) {
               {bySource.map(({ source, count }) => {
                 const percent = total > 0 ? Math.round((count / total) * 100) : 0;
                 return (
-                  <div key={source} className="source-bar-row">
+                  <div
+                    key={source}
+                    className="source-bar-row interactive"
+                    onClick={() => handleSourceClick(source)}
+                    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleSourceClick(source)}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Channel: ${source}, ${count} leads (${percent}%). Click to filter.`}
+                    title={`Click to filter leads by source: ${source}`}
+                  >
                     <div className="source-bar-header">
-                      <span className="source-name">{source}</span>
+                      <div className="source-name-wrap">
+                        <span className="source-name">{source}</span>
+                        <span className="source-filter-badge">Filter →</span>
+                      </div>
                       <div className="source-metrics">
                         <span className="source-count">{count} {count === 1 ? 'lead' : 'leads'}</span>
                         <span className="source-percent-pill">{percent}%</span>
@@ -340,7 +425,7 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead }) {
             <h3 className="section-heading">Recent Leads</h3>
             <p className="section-subheading">Latest leads captured across your sales channels</p>
           </div>
-          <button className="btn-link" onClick={onNavigateToLeads}>
+          <button className="btn-link" onClick={() => handleKpiClick('')}>
             <span>View All Leads</span>
             <ArrowUpRight size={14} />
           </button>
@@ -369,7 +454,12 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead }) {
               </thead>
               <tbody>
                 {recentLeads.map((lead) => (
-                  <tr key={lead.id} className="recent-lead-row">
+                  <tr
+                    key={lead.id}
+                    className="recent-lead-row interactive-row"
+                    onClick={() => (onSelectLead ? onSelectLead(lead) : handleKpiClick(''))}
+                    title="Click to view details"
+                  >
                     <td>
                       <div className="lead-identity">
                         <div className="lead-avatar-sm">
@@ -400,10 +490,10 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead }) {
                         year: 'numeric',
                       })}
                     </td>
-                    <td className="text-right">
+                    <td className="text-right" onClick={(e) => e.stopPropagation()}>
                       <button
                         className="btn-table-action"
-                        onClick={() => onEditLead ? onEditLead(lead) : onNavigateToLeads()}
+                        onClick={() => onEditLead ? onEditLead(lead) : handleKpiClick('')}
                       >
                         Edit
                       </button>

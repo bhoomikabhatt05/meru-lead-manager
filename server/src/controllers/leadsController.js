@@ -9,6 +9,7 @@ function getLeads(req, res, next) {
     const {
       search = '',
       status = '',
+      source = '',
       sortBy = 'created_at',
       sortOrder = 'desc',
       page = '1',
@@ -28,14 +29,19 @@ function getLeads(req, res, next) {
     const params = [];
 
     if (search.trim()) {
-      conditions.push(`(name LIKE ? OR email LIKE ? OR company LIKE ?)`);
+      conditions.push(`(name LIKE ? OR email LIKE ? OR company LIKE ? OR phone LIKE ?)`);
       const searchTerm = `%${search.trim()}%`;
-      params.push(searchTerm, searchTerm, searchTerm);
+      params.push(searchTerm, searchTerm, searchTerm, searchTerm);
     }
 
     if (status.trim()) {
       conditions.push(`status = ?`);
       params.push(status.trim());
+    }
+
+    if (source.trim()) {
+      conditions.push(`source = ?`);
+      params.push(source.trim());
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';

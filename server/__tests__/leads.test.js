@@ -101,14 +101,30 @@ describe('Lead CRUD Operations', () => {
     expect(res.body.pagination.total).toBe(1);
   });
 
-  it('GET /api/leads - supports search by name', async () => {
+  it('GET /api/leads - supports search by name, email, company, and phone', async () => {
     await request(app).post('/api/leads').send(validLead);
-    await request(app).post('/api/leads').send({ ...validLead, name: 'Bob Smith', email: 'bob@example.com' });
+    await request(app).post('/api/leads').send({
+      ...validLead,
+      name: 'Bob Smith',
+      email: 'bob@example.com',
+      company: 'Globex Corp',
+      phone: '+91-9111122222',
+    });
 
-    const res = await request(app).get('/api/leads?search=alice');
-    expect(res.status).toBe(200);
-    expect(res.body.data.length).toBe(1);
-    expect(res.body.data[0].name).toBe('Alice Johnson');
+    const resName = await request(app).get('/api/leads?search=alice');
+    expect(resName.status).toBe(200);
+    expect(resName.body.data.length).toBe(1);
+    expect(resName.body.data[0].name).toBe('Alice Johnson');
+
+    const resPhone = await request(app).get('/api/leads?search=91111');
+    expect(resPhone.status).toBe(200);
+    expect(resPhone.body.data.length).toBe(1);
+    expect(resPhone.body.data[0].name).toBe('Bob Smith');
+
+    const resCompany = await request(app).get('/api/leads?search=Globex');
+    expect(resCompany.status).toBe(200);
+    expect(resCompany.body.data.length).toBe(1);
+    expect(resCompany.body.data[0].company).toBe('Globex Corp');
   });
 
   it('GET /api/leads - supports filter by status', async () => {
@@ -119,6 +135,22 @@ describe('Lead CRUD Operations', () => {
     expect(res.status).toBe(200);
     expect(res.body.data.length).toBe(1);
     expect(res.body.data[0].status).toBe('Lost');
+  });
+
+  it('GET /api/leads - supports filter by acquisition source', async () => {
+    await request(app).post('/api/leads').send(validLead); // source: 'Website'
+    await request(app).post('/api/leads').send({
+      ...validLead,
+      name: 'Charlie',
+      email: 'charlie@referral.com',
+      source: 'Referral',
+    });
+
+    const res = await request(app).get('/api/leads?source=Referral');
+    expect(res.status).toBe(200);
+    expect(res.body.data.length).toBe(1);
+    expect(res.body.data[0].name).toBe('Charlie');
+    expect(res.body.data[0].source).toBe('Referral');
   });
 
   it('GET /api/leads/:id - returns single lead', async () => {

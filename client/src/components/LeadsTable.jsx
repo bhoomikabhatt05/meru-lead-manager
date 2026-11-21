@@ -1,5 +1,15 @@
 import { StatusBadge } from './StatusBadge';
-import { EditIcon, TrashIcon, BuildingIcon, MailIcon, PhoneIcon, SortIcon, SearchIcon, PlusIcon } from './Icons';
+import {
+  EditIcon,
+  TrashIcon,
+  BuildingIcon,
+  MailIcon,
+  PhoneIcon,
+  SortIcon,
+  SearchIcon,
+  PlusIcon,
+  ChevronRight,
+} from './Icons';
 
 const COLUMNS = [
   { key: 'name', label: 'Lead & Contact', sortable: true },
@@ -17,6 +27,7 @@ export function LeadsTable({
   onSort,
   onEdit,
   onDelete,
+  onSelectLead,
   onClearFilters,
   onAddLead,
 }) {
@@ -54,7 +65,7 @@ export function LeadsTable({
   }
 
   if (!loading && leads.length === 0) {
-    const isFiltered = Boolean(filters.search || filters.status);
+    const isFiltered = Boolean(filters.search || filters.status || filters.source);
     return (
       <div className="table-card-container">
         <div className="table-state-box empty">
@@ -66,12 +77,12 @@ export function LeadsTable({
           </h3>
           <p className="state-message">
             {isFiltered
-              ? `No records match "${filters.search || filters.status}". Try adjusting your search term or filter.`
+              ? `No records match your active search or filter criteria. Try adjusting your filters.`
               : 'Start building your sales pipeline by adding your first lead or importing demonstration data.'}
           </p>
           {isFiltered ? (
             <button className="btn-secondary-sm" onClick={onClearFilters}>
-              Clear Search & Filter
+              Clear All Filters
             </button>
           ) : (
             <button className="btn-primary-lead" onClick={onAddLead}>
@@ -109,14 +120,27 @@ export function LeadsTable({
                   </th>
                 );
               })}
-              <th className="table-header-cell text-right" style={{ width: 100 }}>
+              <th className="table-header-cell text-right" style={{ width: 110 }}>
                 Actions
               </th>
             </tr>
           </thead>
           <tbody>
             {leads.map((lead) => (
-              <tr key={lead.id} className="lead-table-row">
+              <tr
+                key={lead.id}
+                className="lead-table-row clickable-row"
+                onClick={() => onSelectLead && onSelectLead(lead)}
+                tabIndex={0}
+                role="button"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onSelectLead && onSelectLead(lead);
+                  }
+                }}
+                aria-label={`View details for ${lead.name}`}
+              >
                 {/* Lead Name & Email */}
                 <td>
                   <div className="lead-name-cell">
@@ -170,8 +194,8 @@ export function LeadsTable({
                   </span>
                 </td>
 
-                {/* Actions */}
-                <td className="text-right">
+                {/* Actions - stopPropagation prevents row selection */}
+                <td className="text-right" onClick={(e) => e.stopPropagation()}>
                   <div className="row-action-buttons">
                     <button
                       className="btn-action-icon edit"

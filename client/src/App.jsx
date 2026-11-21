@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useLeads } from './hooks/useLeads';
 import { useToast } from './hooks/useToast';
 import { Sidebar } from './components/Sidebar';
@@ -9,8 +9,9 @@ import { ConfirmDialog } from './components/ConfirmDialog';
 import { Dashboard } from './components/Dashboard';
 import { Pagination } from './components/Pagination';
 import { ToastList } from './components/Toast';
+import { LeadDetailDrawer } from './components/LeadDetailDrawer';
 import { SearchIcon, CloseIcon } from './components/Icons';
-import { LEAD_STATUSES } from './utils';
+import { LEAD_STATUSES, LEAD_SOURCES } from './utils';
 import { leadsApi } from './api/leadsApi';
 
 export default function App() {
@@ -21,6 +22,8 @@ export default function App() {
     error,
     filters,
     updateFilter,
+    setFilterBatch,
+    resetFilters,
     setSort,
     createLead,
     updateLead,
@@ -35,9 +38,12 @@ export default function App() {
   const [showForm, setShowForm] = useState(false);
   const [editingLead, setEditingLead] = useState(null);
   const [deletingLead, setDeletingLead] = useState(null);
+  const [selectedLead, setSelectedLead] = useState(null);
   const [formLoading, setFormLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [statusCounts, setStatusCounts] = useState({});
+
+  const searchInputRef = useRef(null);
 
   // Fetch status counts for sidebar and filters
   const fetchCounts = useCallback(async () => {
@@ -55,19 +61,32 @@ export default function App() {
     fetchCounts();
   }, [fetchCounts, leads]);
 
-  // Global keyboard shortcut: 'N' to open New Lead modal
+  // Global keyboard shortcuts: 'N' for New Lead, '/' or 'Cmd+K' to focus search
   useEffect(() => {
     function handleKeyDown(e) {
       const isInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName);
-      if (e.key.toLowerCase() === 'n' && !isInput && !showForm && !deletingLead) {
+      if (isInput) return;
+
+      // 'N' for new lead
+      if (e.key.toLowerCase() === 'n' && !showForm && !deletingLead && !selectedLead) {
         e.preventDefault();
         setEditingLead(null);
         setShowForm(true);
+        return;
+      }
+
+      // '/' or 'Cmd+K' / 'Ctrl+K' to focus search
+      if (e.key === '/' || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k')) {
+        e.preventDefault();
+        setActiveTab('leads');
+        setTimeout(() => {
+          searchInputRef.current?.focus();
+        }, 50);
       }
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showForm, deletingLead]);
+  }, [showForm, deletingLead, selectedLead]);
 
   // ---- Handlers ----
   const handleAddClick = useCallback(() => {
@@ -88,7 +107,10 @@ export default function App() {
     setFormLoading(true);
     try {
       if (editingLead) {
-        await updateLead(editingLead.id, data);
+        const updated = await updateLead(editingLead.id, data);
+        if (selectedLead && selectedLead.id === editingLead.id) {
+          setSelectedLead(updated);
+        }
         addToast(`Lead "${data.name}" updated successfully`, 'success');
       } else {
         await createLead(data);
@@ -98,7 +120,7 @@ export default function App() {
     } finally {
       setFormLoading(false);
     }
-  }, [editingLead, createLead, updateLead, addToast, fetchCounts]);
+  }, [editingLead, selectedLead, createLead, updateLead, addToast, fetchCounts]);
 
   const handleFormClose = useCallback(() => {
     setShowForm(false);
@@ -110,6 +132,9 @@ export default function App() {
     setDeleteLoading(true);
     try {
       await deleteLead(deletingLead.id);
+      if (selectedLead && selectedLead.id === deletingLead.id) {
+        setSelectedLead(null);
+      }
       addToast(`Lead "${deletingLead.name}" deleted`, 'success');
       setDeletingLead(null);
       fetchCounts();
@@ -118,18 +143,33 @@ export default function App() {
     } finally {
       setDeleteLoading(false);
     }
-  }, [deletingLead, deleteLead, addToast, fetchCounts]);
+  }, [deletingLead, selectedLead, deleteLead, addToast, fetchCounts]);
+
+  // Quick status update directly from the Progressive Disclosure drawer
+  const handleQuickStatusChange = useCallback(async (id, newStatus) => {
+    try {
+      const updated = await updateLead(id, { status: newStatus });
+      if (selectedLead && selectedLead.id === id) {
+        setSelectedLead(updated);
+      }
+      addToast(`Status updated to "${newStatus}"`, 'success');
+      fetchCounts();
+    } catch (err) {
+      addToast(err.message || 'Failed to update lead status', 'error');
+    }
+  }, [updateLead, selectedLead, addToast, fetchCounts]);
+
+  // Direct navigation from Dashboard elements (KPI cards, donut, acquisition bars)
+  const handleDashboardNavigate = useCallback((filterOverrides = {}) => {
+    setActiveTab('leads');
+    setFilterBatch(filterOverrides);
+  }, [setFilterBatch]);
 
   // Quick filter from sidebar
   const handleStatusQuickFilter = useCallback((status) => {
     setActiveTab('leads');
-    updateFilter('status', status);
-  }, [updateFilter]);
-
-  const handleClearFilters = useCallback(() => {
-    updateFilter('search', '');
-    updateFilter('status', '');
-  }, [updateFilter]);
+    setFilterBatch({ status, source: '', search: '' });
+  }, [setFilterBatch]);
 
   const statusTabItems = ['All', ...LEAD_STATUSES];
 
@@ -160,26 +200,28 @@ export default function App() {
         <main className="crm-page-content">
           {activeTab === 'dashboard' ? (
             <Dashboard
-              onNavigateToLeads={() => setActiveTab('leads')}
+              onNavigateToLeads={handleDashboardNavigate}
               onAddLead={handleAddClick}
               onEditLead={handleEditClick}
+              onSelectLead={(lead) => setSelectedLead(lead)}
             />
           ) : (
             <div className="leads-view-wrapper">
               {/* Secondary Filter & Search Toolbar */}
               <div className="leads-action-toolbar">
-                {/* Search Bar */}
+                {/* Search Bar with Keyboard Hint */}
                 <div className="search-bar-wrap">
                   <SearchIcon size={16} className="search-input-icon" />
                   <input
+                    ref={searchInputRef}
                     type="text"
                     className="lead-search-input"
-                    placeholder="Search by name, email, or company…"
+                    placeholder="Search name, email, company, or phone…"
                     value={filters.search}
                     onChange={(e) => updateFilter('search', e.target.value)}
                     aria-label="Search leads"
                   />
-                  {filters.search && (
+                  {filters.search ? (
                     <button
                       className="search-clear-btn"
                       onClick={() => updateFilter('search', '')}
@@ -187,6 +229,8 @@ export default function App() {
                     >
                       <CloseIcon size={14} />
                     </button>
+                  ) : (
+                    <span className="search-shortcut-hint" title="Press / or ⌘K to search">/</span>
                   )}
                 </div>
 
@@ -212,6 +256,21 @@ export default function App() {
                   })}
                 </div>
 
+                {/* Source Filter Dropdown */}
+                <div className="source-filter-wrap">
+                  <select
+                    className={`select-source-filter ${filters.source ? 'active-filter' : ''}`}
+                    value={filters.source || ''}
+                    onChange={(e) => updateFilter('source', e.target.value)}
+                    aria-label="Filter by acquisition source"
+                  >
+                    <option value="">All Acquisition Channels</option>
+                    {LEAD_SOURCES.map((src) => (
+                      <option key={src} value={src}>{src}</option>
+                    ))}
+                  </select>
+                </div>
+
                 {/* Per-Page Selector */}
                 <div className="pagination-limit-wrap">
                   <span className="limit-label">Show:</span>
@@ -226,15 +285,53 @@ export default function App() {
                     ))}
                   </select>
                 </div>
-
-                {/* Clear all active filters */}
-                {(filters.search || filters.status) && (
-                  <button className="btn-clear-filters" onClick={handleClearFilters}>
-                    <CloseIcon size={13} />
-                    <span>Reset Filters</span>
-                  </button>
-                )}
               </div>
+
+              {/* Active Filter Tags with Single-Click Clear */}
+              {(filters.search || filters.status || filters.source) && (
+                <div className="active-filters-bar">
+                  <span className="active-filters-label">Active Filters:</span>
+                  {filters.status && (
+                    <span className="active-filter-tag">
+                      Status: <strong>{filters.status}</strong>
+                      <button
+                        className="btn-remove-tag"
+                        onClick={() => updateFilter('status', '')}
+                        aria-label={`Remove ${filters.status} status filter`}
+                      >
+                        <CloseIcon size={11} />
+                      </button>
+                    </span>
+                  )}
+                  {filters.source && (
+                    <span className="active-filter-tag">
+                      Source: <strong>{filters.source}</strong>
+                      <button
+                        className="btn-remove-tag"
+                        onClick={() => updateFilter('source', '')}
+                        aria-label={`Remove ${filters.source} source filter`}
+                      >
+                        <CloseIcon size={11} />
+                      </button>
+                    </span>
+                  )}
+                  {filters.search && (
+                    <span className="active-filter-tag">
+                      Search: "<strong>{filters.search}</strong>"
+                      <button
+                        className="btn-remove-tag"
+                        onClick={() => updateFilter('search', '')}
+                        aria-label="Remove search query"
+                      >
+                        <CloseIcon size={11} />
+                      </button>
+                    </span>
+                  )}
+                  <button className="btn-clear-all-tags" onClick={resetFilters}>
+                    Clear All
+                  </button>
+                </div>
+              )}
 
               {/* Data Table */}
               <LeadsTable
@@ -245,7 +342,8 @@ export default function App() {
                 onSort={setSort}
                 onEdit={handleEditClick}
                 onDelete={handleDeleteClick}
-                onClearFilters={handleClearFilters}
+                onSelectLead={(lead) => setSelectedLead(lead)}
+                onClearFilters={resetFilters}
                 onAddLead={handleAddClick}
               />
 
@@ -260,6 +358,16 @@ export default function App() {
           )}
         </main>
       </div>
+
+      {/* Progressive Disclosure: Lead Details Drawer */}
+      <LeadDetailDrawer
+        lead={selectedLead}
+        isOpen={Boolean(selectedLead)}
+        onClose={() => setSelectedLead(null)}
+        onEdit={handleEditClick}
+        onDelete={handleDeleteClick}
+        onStatusChange={handleQuickStatusChange}
+      />
 
       {/* Slide-over / Modal Lead Form */}
       {showForm && (

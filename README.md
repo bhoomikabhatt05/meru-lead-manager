@@ -13,21 +13,24 @@ A full-stack CRM Lead Manager application built as part of the **Meru Technosoft
 - ✅ **Display leads in a structured table** with status badges clearly displayed.
 - ✅ **Edit existing leads** via a responsive modal form.
 - ✅ **Delete leads** with a confirmation modal to prevent accidental data loss.
-- ✅ **Search and filter** leads by name, email, company, or status.
+- ✅ **Search and filter** leads across name, email, company, and phone numbers, with status and acquisition source filters.
 - ✅ **Comprehensive validation** on frontend (immediate inline feedback) and backend (**Zod** schema with field-level error messages).
 - ✅ **Persistent database storage** in SQLite.
 
-### Bonus Features & UI/UX Redesign
-- ✅ **Linear & Attio Inspired Application Shell**: Refined left sidebar navigation, brand identity, pipeline stage counters, and top header bar.
+### Bonus Features, UI/UX Redesign & Apple HIG Usability
+- ✅ **Linear, Attio & Apple HIG-Inspired Application Shell**: Refined left sidebar navigation, brand identity, pipeline stage counters, and top header bar.
+- ✅ **Direct Manipulation KPI Cards**: All 5 KPI cards (Total, New, Contacted, Qualified, Lost) are interactive buttons with keyboard accessibility that filter the leads view with one click.
 - ✅ **Interactive Dashboard Visualizations**:
-  - SVG Donut Chart for status distribution with interactive hover state, center counter, and status legend.
-  - Ranked acquisition channel progress bars with proportional percentages and channel badges.
-  - Recent Leads activity section showing latest leads with direct navigation to table and edit modals.
-- ✅ **Advanced Data Management Toolbar**: Fast search input, segmented status filter pills with live counts, and page size selector.
-- ✅ **Slide-Over Modal Form**: High-density modal with contact & company grouping, inline field validation, and keyboard shortcuts (`N` to create, `Esc` to close).
+  - SVG Donut Chart with clickable arc segments and legend items that filter the pipeline by status.
+  - Ranked acquisition channel progress bars that navigate to filtered source lists on click.
+  - Recent Leads activity table with row-click progressive disclosure.
+- ✅ **Progressive Disclosure: Lead Details Drawer**: Slide-over panel revealing comprehensive contact information, direct manipulation quick status switcher, one-click email/phone clipboard copy, notes block, and system timestamps.
+- ✅ **Unsaved Changes Protection**: Smart dirty-state detection prompts confirmation before discarding edits if the modal is dismissed via Esc, backdrop, or cancel.
+- ✅ **Advanced Data Management Toolbar**: Multi-field search with keyboard shortcut hint, segmented status tabs, acquisition channel filter dropdown, active filter pill badges with one-click removal, and page size selector.
+- ✅ **Keyboard Accessibility**: `N` to create a new lead, `/` or `⌘K` to focus search, and `Esc` to close modals and slide-over drawers.
 - ✅ **Demonstration Data Seed Script**: `npm run seed` populates 11 realistic leads across all 4 statuses and 6 sources for immediate evaluation.
 - ✅ **Sorting & Pagination** on the leads table with configurable page size (10, 25, 50).
-- ✅ **Automated API test suite** using **Jest** and **Supertest** (18 tests, 100% passing).
+- ✅ **Automated API test suite** using **Jest** and **Supertest** (19 tests, 100% passing).
 - ✅ **Toast notifications** for all CRUD operations.
 
 ---
@@ -41,7 +44,7 @@ A full-stack CRM Lead Manager application built as part of the **Meru Technosoft
 | Backend    | Node.js (Express 4) | Layered architecture: routes, controllers, validators, middleware |
 | Database   | SQLite (via `node:sqlite`) | Built-in Node.js `DatabaseSync` — zero external native C++ build dependencies |
 | Validation | Zod 3.22 (backend), Custom JS (frontend) | Synchronized schema validation with field-level error mapping |
-| Testing    | Jest 29 + Supertest 7 | 18 automated tests covering CRUD, validations, pagination, and stats |
+| Testing    | Jest 29 + Supertest 7 | 19 automated tests covering CRUD, validations, pagination, and stats |
 | Language   | JavaScript | ES modules on client, CommonJS on server |
 
 ---
@@ -257,7 +260,7 @@ npm test
 ### Verified Test Results
 - **Test Framework**: Jest 29 + Supertest 7
 - **Test Suite**: `server/__tests__/leads.test.js`
-- **Result**: **18 passed, 18 total (100% passing)**
+- **Result**: **19 passed, 19 total (100% passing)**
 - **Execution Time**: ~0.35 seconds
 
 **Covered Scenarios:**
@@ -269,16 +272,17 @@ npm test
 6. Rejection of unsupported or legacy status values.
 7. Rejection of duplicate email addresses (unique constraint).
 8. List retrieval with pagination metadata.
-9. Multi-column search filter (name, email, company).
+9. Multi-column search filter (name, email, company, and phone).
 10. Status filter (`status=Lost`).
-11. Single lead retrieval by ID.
-12. 404 response on non-existent lead ID.
-13. Lead updates (PUT) with validation.
-14. 404 response on update to non-existent ID.
-15. Lead deletion (DELETE) with SQLite row removal.
-16. 404 response on deletion of non-existent ID.
-17. Dashboard stats aggregation across all 4 statuses.
-18. Pagination offsets and limits.
+11. Acquisition source filter (`source=Referral`).
+12. Single lead retrieval by ID.
+13. 404 response on non-existent lead ID.
+14. Lead updates (PUT) with validation.
+15. 404 response on update to non-existent ID.
+16. Lead deletion (DELETE) with SQLite row removal.
+17. 404 response on deletion of non-existent ID.
+18. Dashboard stats aggregation across all 4 statuses.
+19. Pagination offsets and limits.
 
 ---
 

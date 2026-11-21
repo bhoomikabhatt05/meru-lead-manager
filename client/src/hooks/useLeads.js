@@ -13,6 +13,7 @@ export function useLeads() {
   const [filters, setFilters] = useState({
     search: '',
     status: '',
+    source: '',
     sortBy: 'created_at',
     sortOrder: 'desc',
     page: 1,
@@ -43,6 +44,24 @@ export function useLeads() {
       [key]: value,
       // Reset to page 1 on filter changes (not on pagination)
       page: key !== 'page' ? 1 : value,
+    }));
+  }, []);
+
+  const setFilterBatch = useCallback((updates) => {
+    setFilters((prev) => ({
+      ...prev,
+      ...updates,
+      page: 1,
+    }));
+  }, []);
+
+  const resetFilters = useCallback(() => {
+    setFilters((prev) => ({
+      ...prev,
+      search: '',
+      status: '',
+      source: '',
+      page: 1,
     }));
   }, []);
 
@@ -79,6 +98,8 @@ export function useLeads() {
     error,
     filters,
     updateFilter,
+    setFilterBatch,
+    resetFilters,
     setSort,
     createLead,
     updateLead,
