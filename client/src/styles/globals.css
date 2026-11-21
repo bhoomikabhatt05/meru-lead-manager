@@ -26,19 +26,13 @@
   --color-success:        #16a34a;
   --color-warning:        #d97706;
 
-  /* Status badge colours */
+  /* Status badge colours (New, Contacted, Qualified, Lost) */
   --badge-new:            #dbeafe;
   --badge-new-text:       #1d4ed8;
   --badge-contacted:      #fef9c3;
   --badge-contacted-text: #854d0e;
   --badge-qualified:      #dcfce7;
   --badge-qualified-text: #15803d;
-  --badge-proposal:       #f3e8ff;
-  --badge-proposal-text:  #7e22ce;
-  --badge-negotiation:    #ffedd5;
-  --badge-negotiation-text:#9a3412;
-  --badge-won:            #d1fae5;
-  --badge-won-text:       #065f46;
   --badge-lost:           #fee2e2;
   --badge-lost-text:      #991b1b;
 
@@ -441,10 +435,7 @@ input, select, textarea {
 .badge-New          { background: var(--badge-new);          color: var(--badge-new-text); }
 .badge-Contacted    { background: var(--badge-contacted);    color: var(--badge-contacted-text); }
 .badge-Qualified    { background: var(--badge-qualified);    color: var(--badge-qualified-text); }
-.badge-Proposal     { background: var(--badge-proposal);     color: var(--badge-proposal-text); }
-.badge-Negotiation  { background: var(--badge-negotiation);  color: var(--badge-negotiation-text); }
-.badge-ClosedWon    { background: var(--badge-won);          color: var(--badge-won-text); }
-.badge-ClosedLost   { background: var(--badge-lost);         color: var(--badge-lost-text); }
+.badge-Lost         { background: var(--badge-lost);         color: var(--badge-lost-text); }
 
 /* ---- Empty & Loading States ---- */
 .state-container {

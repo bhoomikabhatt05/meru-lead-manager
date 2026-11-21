@@ -47,7 +47,21 @@ describe('Lead CRUD Operations', () => {
     expect(res.status).toBe(201);
     expect(res.body.name).toBe(validLead.name);
     expect(res.body.email).toBe(validLead.email.toLowerCase());
+    expect(res.body.status).toBe('New');
     expect(res.body.id).toBeDefined();
+  });
+
+  it('POST /api/leads - supports all 4 valid statuses: New, Contacted, Qualified, Lost', async () => {
+    const statuses = ['New', 'Contacted', 'Qualified', 'Lost'];
+    for (const status of statuses) {
+      const res = await request(app).post('/api/leads').send({
+        ...validLead,
+        email: `test-${status.toLowerCase()}@example.com`,
+        status,
+      });
+      expect(res.status).toBe(201);
+      expect(res.body.status).toBe(status);
+    }
   });
 
   it('POST /api/leads - rejects missing required fields', async () => {
@@ -63,9 +77,13 @@ describe('Lead CRUD Operations', () => {
     expect(res.body.details.some((d) => d.field === 'email')).toBe(true);
   });
 
-  it('POST /api/leads - rejects invalid status', async () => {
-    const res = await request(app).post('/api/leads').send({ ...validLead, status: 'InvalidStatus' });
-    expect(res.status).toBe(400);
+  it('POST /api/leads - rejects invalid or unsupported status', async () => {
+    const invalidStatuses = ['InvalidStatus', 'Proposal', 'Negotiation', 'Closed Won'];
+    for (const st of invalidStatuses) {
+      const res = await request(app).post('/api/leads').send({ ...validLead, email: `test-${st}@ex.com`, status: st });
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBe('Validation failed');
+    }
   });
 
   it('POST /api/leads - rejects duplicate email', async () => {
@@ -95,12 +113,12 @@ describe('Lead CRUD Operations', () => {
 
   it('GET /api/leads - supports filter by status', async () => {
     await request(app).post('/api/leads').send(validLead);
-    await request(app).post('/api/leads').send({ ...validLead, name: 'Bob', email: 'bob@ex.com', status: 'Qualified' });
+    await request(app).post('/api/leads').send({ ...validLead, name: 'Bob', email: 'bob@ex.com', status: 'Lost' });
 
-    const res = await request(app).get('/api/leads?status=Qualified');
+    const res = await request(app).get('/api/leads?status=Lost');
     expect(res.status).toBe(200);
     expect(res.body.data.length).toBe(1);
-    expect(res.body.data[0].status).toBe('Qualified');
+    expect(res.body.data[0].status).toBe('Lost');
   });
 
   it('GET /api/leads/:id - returns single lead', async () => {
@@ -115,13 +133,13 @@ describe('Lead CRUD Operations', () => {
     expect(res.status).toBe(404);
   });
 
-  it('PUT /api/leads/:id - updates a lead', async () => {
+  it('PUT /api/leads/:id - updates a lead status and details', async () => {
     const created = await request(app).post('/api/leads').send(validLead);
     const res = await request(app)
       .put(`/api/leads/${created.body.id}`)
-      .send({ status: 'Qualified', company: 'Updated Corp' });
+      .send({ status: 'Contacted', company: 'Updated Corp' });
     expect(res.status).toBe(200);
-    expect(res.body.status).toBe('Qualified');
+    expect(res.body.status).toBe('Contacted');
     expect(res.body.company).toBe('Updated Corp');
   });
 
@@ -146,7 +164,7 @@ describe('Lead CRUD Operations', () => {
 });
 
 describe('Stats Endpoint', () => {
-  it('GET /api/leads/stats - returns statistics', async () => {
+  it('GET /api/leads/stats - returns statistics for all 4 statuses', async () => {
     await request(app).post('/api/leads').send({
       name: 'Alice',
       email: 'alice@test.com',
@@ -163,18 +181,27 @@ describe('Stats Endpoint', () => {
       source: 'Referral',
       status: 'Qualified',
     });
+    await request(app).post('/api/leads').send({
+      name: 'Charlie',
+      email: 'charlie@test.com',
+      phone: '0987654322',
+      company: 'Corp C',
+      source: 'Social Media',
+      status: 'Lost',
+    });
 
     const res = await request(app).get('/api/leads/stats');
     expect(res.status).toBe(200);
-    expect(res.body.total).toBe(2);
-    expect(res.body.byStatus).toBeDefined();
+    expect(res.body.total).toBe(3);
+    expect(res.body.byStatus.New).toBe(1);
+    expect(res.body.byStatus.Qualified).toBe(1);
+    expect(res.body.byStatus.Lost).toBe(1);
     expect(res.body.bySource).toBeDefined();
   });
 });
 
 describe('Pagination', () => {
-  it('GET /api/leads - supports pagination', async () => {
-    // Create 3 leads
+  it('GET /api/leads - supports pagination with limit and page offsets', async () => {
     for (let i = 1; i <= 3; i++) {
       await request(app).post('/api/leads').send({
         name: `Lead ${i}`,

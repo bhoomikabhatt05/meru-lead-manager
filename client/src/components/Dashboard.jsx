@@ -1,16 +1,13 @@
 import { useState, useEffect } from 'react';
 import { leadsApi } from '../api/leadsApi';
 
-const STATUS_ORDER = ['New', 'Contacted', 'Qualified', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'];
+const STATUS_ORDER = ['New', 'Contacted', 'Qualified', 'Lost'];
 
 const STATUS_ICONS = {
   'New': '🔵',
   'Contacted': '🟡',
   'Qualified': '🟢',
-  'Proposal': '🟣',
-  'Negotiation': '🟠',
-  'Closed Won': '✅',
-  'Closed Lost': '🔴',
+  'Lost': '🔴',
 };
 
 export function Dashboard() {
@@ -45,11 +42,12 @@ export function Dashboard() {
   const byStatus = stats?.byStatus ?? {};
   const bySource = stats?.bySource ?? [];
 
-  const wonCount = byStatus['Closed Won'] || 0;
-  const lostCount = byStatus['Closed Lost'] || 0;
-  const activeCount = total - wonCount - lostCount;
-  const winRate = wonCount + lostCount > 0
-    ? Math.round((wonCount / (wonCount + lostCount)) * 100)
+  const newCount = byStatus['New'] || 0;
+  const contactedCount = byStatus['Contacted'] || 0;
+  const qualifiedCount = byStatus['Qualified'] || 0;
+  const lostCount = byStatus['Lost'] || 0;
+  const conversionRate = total > 0
+    ? Math.round((qualifiedCount / total) * 100)
     : 0;
 
   return (
@@ -61,22 +59,26 @@ export function Dashboard() {
           <div className="stat-card-label">Total Leads</div>
         </div>
         <div className="stat-card">
-          <div className="stat-card-value">{activeCount}</div>
-          <div className="stat-card-label">Active</div>
+          <div className="stat-card-value">{newCount}</div>
+          <div className="stat-card-label">New</div>
         </div>
         <div className="stat-card">
-          <div className="stat-card-value" style={{ color: 'var(--color-success)' }}>{wonCount}</div>
-          <div className="stat-card-label">Closed Won</div>
+          <div className="stat-card-value" style={{ color: 'var(--badge-contacted-text)' }}>{contactedCount}</div>
+          <div className="stat-card-label">Contacted</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-card-value" style={{ color: 'var(--color-success)' }}>{qualifiedCount}</div>
+          <div className="stat-card-label">Qualified</div>
         </div>
         <div className="stat-card">
           <div className="stat-card-value" style={{ color: 'var(--color-danger)' }}>{lostCount}</div>
-          <div className="stat-card-label">Closed Lost</div>
+          <div className="stat-card-label">Lost</div>
         </div>
         <div className="stat-card">
-          <div className="stat-card-value" style={{ color: winRate > 50 ? 'var(--color-success)' : 'var(--color-warning)' }}>
-            {winRate}%
+          <div className="stat-card-value" style={{ color: conversionRate >= 30 ? 'var(--color-success)' : 'var(--color-warning)' }}>
+            {conversionRate}%
           </div>
-          <div className="stat-card-label">Win Rate</div>
+          <div className="stat-card-label">Qualified Rate</div>
         </div>
       </div>
 

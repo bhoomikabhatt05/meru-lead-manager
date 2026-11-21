@@ -1,7 +1,7 @@
 const { z } = require('zod');
 
 const LEAD_SOURCES = ['Website', 'Referral', 'Social Media', 'Email Campaign', 'Cold Call', 'Other'];
-const LEAD_STATUSES = ['New', 'Contacted', 'Qualified', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'];
+const LEAD_STATUSES = ['New', 'Contacted', 'Qualified', 'Lost'];
 
 const leadSchema = z.object({
   name: z.string()

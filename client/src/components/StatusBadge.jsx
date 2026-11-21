@@ -3,10 +3,7 @@ export function StatusBadge({ status }) {
     'New': 'badge-New',
     'Contacted': 'badge-Contacted',
     'Qualified': 'badge-Qualified',
-    'Proposal': 'badge-Proposal',
-    'Negotiation': 'badge-Negotiation',
-    'Closed Won': 'badge-ClosedWon',
-    'Closed Lost': 'badge-ClosedLost',
+    'Lost': 'badge-Lost',
   };
 
   return (

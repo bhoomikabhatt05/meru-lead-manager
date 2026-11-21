@@ -6,16 +6,13 @@ export function getBadgeClass(status) {
     'New': 'badge-New',
     'Contacted': 'badge-Contacted',
     'Qualified': 'badge-Qualified',
-    'Proposal': 'badge-Proposal',
-    'Negotiation': 'badge-Negotiation',
-    'Closed Won': 'badge-ClosedWon',
-    'Closed Lost': 'badge-ClosedLost',
+    'Lost': 'badge-Lost',
   };
   return map[status] || 'badge-New';
 }
 
 export const LEAD_SOURCES = ['Website', 'Referral', 'Social Media', 'Email Campaign', 'Cold Call', 'Other'];
-export const LEAD_STATUSES = ['New', 'Contacted', 'Qualified', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'];
+export const LEAD_STATUSES = ['New', 'Contacted', 'Qualified', 'Lost'];
 
 /**
  * Basic client-side validation (mirrors server Zod schema)
