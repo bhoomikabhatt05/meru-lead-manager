@@ -1,3 +1,5 @@
+import { ChevronRight } from './Icons';
+
 export function Pagination({ pagination, onPageChange }) {
   const { total, page, limit, totalPages } = pagination;
   if (total === 0) return null;
@@ -5,7 +7,6 @@ export function Pagination({ pagination, onPageChange }) {
   const start = (page - 1) * limit + 1;
   const end = Math.min(page * limit, total);
 
-  // Build visible page numbers with ellipsis
   function getPages() {
     if (totalPages <= 7) {
       return Array.from({ length: totalPages }, (_, i) => i + 1);
@@ -22,43 +23,52 @@ export function Pagination({ pagination, onPageChange }) {
   }
 
   return (
-    <div className="pagination">
-      <div className="pagination-info">
-        Showing <strong>{start}–{end}</strong> of <strong>{total}</strong> leads
+    <div className="pagination-bar-wrapper">
+      <div className="pagination-record-summary">
+        Showing <span className="highlight-text">{start}–{end}</span> of <span className="highlight-text">{total}</span> leads
       </div>
-      <div className="pagination-controls">
+
+      <div className="pagination-nav-group">
         <button
-          className="pagination-btn"
+          className="btn-page-nav"
           onClick={() => onPageChange(page - 1)}
           disabled={page === 1}
           aria-label="Previous page"
         >
-          ‹
+          <span style={{ transform: 'rotate(180deg)', display: 'inline-block' }}>
+            <ChevronRight size={14} />
+          </span>
+          <span>Previous</span>
         </button>
 
-        {getPages().map((p, i) => (
-          p === '…' ? (
-            <span key={`ellipsis-${i}`} style={{ padding: '0 4px', color: 'var(--color-text-muted)' }}>…</span>
-          ) : (
-            <button
-              key={p}
-              className={`pagination-btn ${p === page ? 'active' : ''}`}
-              onClick={() => onPageChange(p)}
-              aria-label={`Page ${p}`}
-              aria-current={p === page ? 'page' : undefined}
-            >
-              {p}
-            </button>
-          )
-        ))}
+        <div className="page-numbers-cluster">
+          {getPages().map((p, idx) =>
+            p === '…' ? (
+              <span key={`ellipsis-${idx}`} className="page-ellipsis">
+                …
+              </span>
+            ) : (
+              <button
+                key={p}
+                className={`page-num-pill ${p === page ? 'current' : ''}`}
+                onClick={() => onPageChange(p)}
+                aria-label={`Page ${p}`}
+                aria-current={p === page ? 'page' : undefined}
+              >
+                {p}
+              </button>
+            )
+          )}
+        </div>
 
         <button
-          className="pagination-btn"
+          className="btn-page-nav"
           onClick={() => onPageChange(page + 1)}
           disabled={page === totalPages}
           aria-label="Next page"
         >
-          ›
+          <span>Next</span>
+          <ChevronRight size={14} />
         </button>
       </div>
     </div>

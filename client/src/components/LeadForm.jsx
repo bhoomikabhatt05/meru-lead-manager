@@ -1,9 +1,15 @@
 import { useState, useEffect } from 'react';
 import { LEAD_SOURCES, LEAD_STATUSES, validateLeadForm } from '../utils';
+import { CloseIcon, BuildingIcon, MailIcon, PhoneIcon } from './Icons';
 
 const EMPTY_FORM = {
-  name: '', email: '', phone: '', company: '',
-  source: '', status: 'New', notes: '',
+  name: '',
+  email: '',
+  phone: '',
+  company: '',
+  source: '',
+  status: 'New',
+  notes: '',
 };
 
 export function LeadForm({ lead, onSubmit, onClose, loading }) {
@@ -12,7 +18,6 @@ export function LeadForm({ lead, onSubmit, onClose, loading }) {
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
 
-  // Populate form when editing
   useEffect(() => {
     if (lead) {
       setForm({
@@ -31,10 +36,20 @@ export function LeadForm({ lead, onSubmit, onClose, loading }) {
     setServerError('');
   }, [lead]);
 
+  // Handle ESC key to close modal
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === 'Escape' && !loading) {
+        onClose();
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose, loading]);
+
   function handleChange(e) {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
-    // Clear field error on change
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
@@ -55,165 +70,227 @@ export function LeadForm({ lead, onSubmit, onClose, loading }) {
       await onSubmit(form);
       onClose();
     } catch (err) {
-      if (err.details?.length > 0) {
-        // Map server validation errors to fields
+      if (err.details && Array.isArray(err.details) && err.details.length > 0) {
         const fieldErrors = {};
         err.details.forEach(({ field, message }) => {
           if (field) fieldErrors[field] = message;
         });
         setErrors(fieldErrors);
       } else {
-        setServerError(err.message || 'Something went wrong. Please try again.');
+        setServerError(err.message || 'An error occurred while saving the lead.');
       }
     }
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2 className="modal-title">{isEdit ? 'Edit Lead' : 'Add New Lead'}</h2>
-          <button className="modal-close" onClick={onClose} aria-label="Close">×</button>
+    <div className="modal-backdrop-blur" onClick={onClose} role="dialog" aria-modal="true">
+      <div className="lead-modal-drawer" onClick={(e) => e.stopPropagation()}>
+        {/* Modal Header */}
+        <div className="modal-top-bar">
+          <div className="modal-title-wrap">
+            <h2 className="modal-heading">{isEdit ? 'Edit Lead Record' : 'Create New Lead'}</h2>
+            <p className="modal-subheading">
+              {isEdit
+                ? 'Update contact information, pipeline status, or meeting notes.'
+                : 'Capture lead details to track throughout the sales pipeline.'}
+            </p>
+          </div>
+          <button
+            className="btn-modal-close"
+            onClick={onClose}
+            disabled={loading}
+            aria-label="Close dialog"
+          >
+            <CloseIcon size={18} />
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit} noValidate>
-          <div className="modal-body">
-            {serverError && (
-              <div className="form-error-banner" role="alert">
-                {serverError}
-              </div>
-            )}
+        {/* Modal Form */}
+        <form onSubmit={handleSubmit} noValidate className="modal-form-body">
+          {serverError && (
+            <div className="form-alert-banner" role="alert">
+              <span className="alert-icon">⚠️</span>
+              <span className="alert-text">{serverError}</span>
+            </div>
+          )}
 
-            <div className="form-grid">
-              {/* Name */}
-              <div className="form-group">
-                <label className="form-label" htmlFor="name">
-                  Name <span className="required">*</span>
+          <div className="form-sections-container">
+            {/* Section 1: Contact Details */}
+            <div className="form-section-card">
+              <span className="section-label">CONTACT INFORMATION</span>
+              <div className="form-row-grid">
+                {/* Full Name */}
+                <div className="form-field-group">
+                  <label className="field-label" htmlFor="lead-name">
+                    Full Name <span className="req-star">*</span>
+                  </label>
+                  <input
+                    id="lead-name"
+                    name="name"
+                    type="text"
+                    className={`text-input-field ${errors.name ? 'input-error' : ''}`}
+                    placeholder="e.g. Maya Sharma"
+                    value={form.name}
+                    onChange={handleChange}
+                    autoFocus={!isEdit}
+                  />
+                  {errors.name && <span className="field-error-hint">{errors.name}</span>}
+                </div>
+
+                {/* Email Address */}
+                <div className="form-field-group">
+                  <label className="field-label" htmlFor="lead-email">
+                    Work Email <span className="req-star">*</span>
+                  </label>
+                  <div className="input-with-icon-wrap">
+                    <MailIcon size={14} className="input-leading-icon" />
+                    <input
+                      id="lead-email"
+                      name="email"
+                      type="email"
+                      className={`text-input-field has-icon ${errors.email ? 'input-error' : ''}`}
+                      placeholder="maya@company.com"
+                      value={form.email}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  {errors.email && <span className="field-error-hint">{errors.email}</span>}
+                </div>
+              </div>
+
+              <div className="form-row-grid">
+                {/* Phone */}
+                <div className="form-field-group">
+                  <label className="field-label" htmlFor="lead-phone">
+                    Phone Number <span className="req-star">*</span>
+                  </label>
+                  <div className="input-with-icon-wrap">
+                    <PhoneIcon size={14} className="input-leading-icon" />
+                    <input
+                      id="lead-phone"
+                      name="phone"
+                      type="tel"
+                      className={`text-input-field has-icon ${errors.phone ? 'input-error' : ''}`}
+                      placeholder="+91 98765 43210"
+                      value={form.phone}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  {errors.phone && <span className="field-error-hint">{errors.phone}</span>}
+                </div>
+
+                {/* Company */}
+                <div className="form-field-group">
+                  <label className="field-label" htmlFor="lead-company">
+                    Company Name <span className="req-star">*</span>
+                  </label>
+                  <div className="input-with-icon-wrap">
+                    <BuildingIcon size={14} className="input-leading-icon" />
+                    <input
+                      id="lead-company"
+                      name="company"
+                      type="text"
+                      className={`text-input-field has-icon ${errors.company ? 'input-error' : ''}`}
+                      placeholder="Acme Corporation"
+                      value={form.company}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  {errors.company && <span className="field-error-hint">{errors.company}</span>}
+                </div>
+              </div>
+            </div>
+
+            {/* Section 2: Pipeline & Classification */}
+            <div className="form-section-card">
+              <span className="section-label">PIPELINE & CLASSIFICATION</span>
+              <div className="form-row-grid">
+                {/* Source Dropdown */}
+                <div className="form-field-group">
+                  <label className="field-label" htmlFor="lead-source">
+                    Acquisition Source <span className="req-star">*</span>
+                  </label>
+                  <select
+                    id="lead-source"
+                    name="source"
+                    className={`select-input-field ${errors.source ? 'input-error' : ''}`}
+                    value={form.source}
+                    onChange={handleChange}
+                  >
+                    <option value="">Select lead channel…</option>
+                    {LEAD_SOURCES.map((src) => (
+                      <option key={src} value={src}>{src}</option>
+                    ))}
+                  </select>
+                  {errors.source && <span className="field-error-hint">{errors.source}</span>}
+                </div>
+
+                {/* Pipeline Status */}
+                <div className="form-field-group">
+                  <label className="field-label" htmlFor="lead-status">
+                    Pipeline Status <span className="req-star">*</span>
+                  </label>
+                  <select
+                    id="lead-status"
+                    name="status"
+                    className={`select-input-field ${errors.status ? 'input-error' : ''}`}
+                    value={form.status}
+                    onChange={handleChange}
+                  >
+                    {LEAD_STATUSES.map((st) => (
+                      <option key={st} value={st}>{st}</option>
+                    ))}
+                  </select>
+                  {errors.status && <span className="field-error-hint">{errors.status}</span>}
+                </div>
+              </div>
+            </div>
+
+            {/* Section 3: Notes */}
+            <div className="form-section-card">
+              <span className="section-label">NOTES & CONTEXT</span>
+              <div className="form-field-group">
+                <label className="field-label" htmlFor="lead-notes">
+                  Additional Notes (Optional)
                 </label>
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  className={`form-input ${errors.name ? 'error' : ''}`}
-                  value={form.name}
-                  onChange={handleChange}
-                  placeholder="Jane Smith"
-                  autoFocus={!isEdit}
-                />
-                {errors.name && <span className="form-error">{errors.name}</span>}
-              </div>
-
-              {/* Email */}
-              <div className="form-group">
-                <label className="form-label" htmlFor="email">
-                  Email <span className="required">*</span>
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  className={`form-input ${errors.email ? 'error' : ''}`}
-                  value={form.email}
-                  onChange={handleChange}
-                  placeholder="jane@company.com"
-                />
-                {errors.email && <span className="form-error">{errors.email}</span>}
-              </div>
-
-              {/* Phone */}
-              <div className="form-group">
-                <label className="form-label" htmlFor="phone">
-                  Phone <span className="required">*</span>
-                </label>
-                <input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  className={`form-input ${errors.phone ? 'error' : ''}`}
-                  value={form.phone}
-                  onChange={handleChange}
-                  placeholder="+91 98765 43210"
-                />
-                {errors.phone && <span className="form-error">{errors.phone}</span>}
-              </div>
-
-              {/* Company */}
-              <div className="form-group">
-                <label className="form-label" htmlFor="company">
-                  Company <span className="required">*</span>
-                </label>
-                <input
-                  id="company"
-                  name="company"
-                  type="text"
-                  className={`form-input ${errors.company ? 'error' : ''}`}
-                  value={form.company}
-                  onChange={handleChange}
-                  placeholder="Acme Corporation"
-                />
-                {errors.company && <span className="form-error">{errors.company}</span>}
-              </div>
-
-              {/* Source */}
-              <div className="form-group">
-                <label className="form-label" htmlFor="source">
-                  Source <span className="required">*</span>
-                </label>
-                <select
-                  id="source"
-                  name="source"
-                  className={`form-select ${errors.source ? 'error' : ''}`}
-                  value={form.source}
-                  onChange={handleChange}
-                >
-                  <option value="">Select source…</option>
-                  {LEAD_SOURCES.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-                {errors.source && <span className="form-error">{errors.source}</span>}
-              </div>
-
-              {/* Status */}
-              <div className="form-group">
-                <label className="form-label" htmlFor="status">
-                  Status <span className="required">*</span>
-                </label>
-                <select
-                  id="status"
-                  name="status"
-                  className={`form-select ${errors.status ? 'error' : ''}`}
-                  value={form.status}
-                  onChange={handleChange}
-                >
-                  {LEAD_STATUSES.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-                {errors.status && <span className="form-error">{errors.status}</span>}
-              </div>
-
-              {/* Notes */}
-              <div className="form-group full">
-                <label className="form-label" htmlFor="notes">Notes</label>
                 <textarea
-                  id="notes"
+                  id="lead-notes"
                   name="notes"
-                  className="form-input form-textarea"
+                  className="textarea-input-field"
+                  rows="3"
+                  placeholder="Record discovery call notes, requirements, budget expectations, or follow-up timelines…"
                   value={form.notes}
                   onChange={handleChange}
-                  placeholder="Any additional notes…"
                 />
               </div>
             </div>
           </div>
 
-          <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={onClose} disabled={loading}>
+          {/* Modal Footer Actions */}
+          <div className="modal-bottom-actions">
+            <button
+              type="button"
+              className="btn-modal-cancel"
+              onClick={onClose}
+              disabled={loading}
+            >
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? 'Saving…' : isEdit ? 'Save Changes' : 'Add Lead'}
+            <button
+              type="submit"
+              className="btn-modal-submit"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <span className="btn-spinner" />
+                  <span>Saving…</span>
+                </>
+              ) : isEdit ? (
+                'Save Changes'
+              ) : (
+                'Create Lead'
+              )}
             </button>
           </div>
         </form>

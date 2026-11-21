@@ -1,26 +1,27 @@
-import { useToast } from '../hooks/useToast';
-
-export function ToastContainer() {
-  const { toasts } = useToast._store ?? { toasts: [] };
-  return null; // Toasts are rendered via ToastPortal
-}
+import { CheckIcon, CloseIcon } from './Icons';
 
 export function ToastList({ toasts, onRemove }) {
-  if (!toasts.length) return null;
+  if (!toasts || toasts.length === 0) return null;
+
   return (
-    <div className="toast-container">
-      {toasts.map((t) => (
-        <div
-          key={t.id}
-          className={`toast ${t.type}`}
-          onClick={() => onRemove(t.id)}
-          style={{ cursor: 'pointer' }}
-        >
-          <span>
-            {t.type === 'success' && '✓ '}
-            {t.type === 'error' && '✕ '}
-            {t.message}
-          </span>
+    <div className="toast-viewport-portal" aria-live="polite">
+      {toasts.map((toast) => (
+        <div key={toast.id} className={`saas-toast-card ${toast.type}`}>
+          <div className="toast-icon-wrap">
+            {toast.type === 'success' ? (
+              <CheckIcon size={14} className="toast-svg-icon" />
+            ) : (
+              <span className="toast-alert-mark">!</span>
+            )}
+          </div>
+          <span className="toast-message-body">{toast.message}</span>
+          <button
+            className="toast-dismiss-button"
+            onClick={() => onRemove(toast.id)}
+            aria-label="Dismiss notification"
+          >
+            <CloseIcon size={14} />
+          </button>
         </div>
       ))}
     </div>

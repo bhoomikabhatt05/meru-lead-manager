@@ -7,11 +7,11 @@ node_modules/
 **/.env
 
 # Database
-server/data/*.db
-server/data/*.sqlite
-server/database/*.db
-*.db
-*.sqlite
+server/data/
+server/database/
+data/
+*.db*
+*.sqlite*
 
 # Build outputs
 client/dist/

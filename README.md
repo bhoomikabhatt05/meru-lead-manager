@@ -17,12 +17,18 @@ A full-stack CRM Lead Manager application built as part of the **Meru Technosoft
 - ✅ **Comprehensive validation** on frontend (immediate inline feedback) and backend (**Zod** schema with field-level error messages).
 - ✅ **Persistent database storage** in SQLite.
 
-### Bonus Features Implemented
-- ✅ **Dashboard** displaying total leads, status distribution breakdown (`New`, `Contacted`, `Qualified`, `Lost`), source distribution breakdown, and qualification rate.
+### Bonus Features & UI/UX Redesign
+- ✅ **Linear & Attio Inspired Application Shell**: Refined left sidebar navigation, brand identity, pipeline stage counters, and top header bar.
+- ✅ **Interactive Dashboard Visualizations**:
+  - SVG Donut Chart for status distribution with interactive hover state, center counter, and status legend.
+  - Ranked acquisition channel progress bars with proportional percentages and channel badges.
+  - Recent Leads activity section showing latest leads with direct navigation to table and edit modals.
+- ✅ **Advanced Data Management Toolbar**: Fast search input, segmented status filter pills with live counts, and page size selector.
+- ✅ **Slide-Over Modal Form**: High-density modal with contact & company grouping, inline field validation, and keyboard shortcuts (`N` to create, `Esc` to close).
+- ✅ **Demonstration Data Seed Script**: `npm run seed` populates 11 realistic leads across all 4 statuses and 6 sources for immediate evaluation.
 - ✅ **Sorting & Pagination** on the leads table with configurable page size (10, 25, 50).
 - ✅ **Automated API test suite** using **Jest** and **Supertest** (18 tests, 100% passing).
 - ✅ **Toast notifications** for all CRUD operations.
-- ✅ **Custom CSS SaaS CRM design system** with zero heavyweight component library dependencies.
 
 ---
 
@@ -212,6 +218,9 @@ cd server
 npm run dev       # Development with nodemon auto-reload
 # or
 npm start         # Production mode
+
+# (Optional) Seed realistic demonstration leads (11 records across all 4 statuses):
+npm run seed
 ```
 *Server starts on **http://localhost:5001** (using port 5001 avoids macOS AirPlay port 5000 collisions).*
 
