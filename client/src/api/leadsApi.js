@@ -24,18 +24,26 @@ export const leadsApi = {
       }
     });
     const qs = query.toString();
-    return fetch(`${BASE_URL}${qs ? '?' + qs : ''}`).then(handleResponse);
+    return fetch(`${BASE_URL}${qs ? '?' + qs : ''}`, {
+      credentials: 'include',
+    }).then(handleResponse);
   },
 
   /**
    * Fetch statistics
    */
-  getStats: () => fetch(`${BASE_URL}/stats`).then(handleResponse),
+  getStats: () =>
+    fetch(`${BASE_URL}/stats`, {
+      credentials: 'include',
+    }).then(handleResponse),
 
   /**
    * Fetch single lead
    */
-  getById: (id) => fetch(`${BASE_URL}/${id}`).then(handleResponse),
+  getById: (id) =>
+    fetch(`${BASE_URL}/${id}`, {
+      credentials: 'include',
+    }).then(handleResponse),
 
   /**
    * Create a new lead
@@ -44,6 +52,7 @@ export const leadsApi = {
     fetch(BASE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(data),
     }).then(handleResponse),
 
@@ -54,6 +63,7 @@ export const leadsApi = {
     fetch(`${BASE_URL}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(data),
     }).then(handleResponse),
 
@@ -61,5 +71,8 @@ export const leadsApi = {
    * Delete a lead
    */
   delete: (id) =>
-    fetch(`${BASE_URL}/${id}`, { method: 'DELETE' }).then(handleResponse),
+    fetch(`${BASE_URL}/${id}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    }).then(handleResponse),
 };

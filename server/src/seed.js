@@ -1,6 +1,7 @@
 const { DatabaseSync } = require('node:sqlite');
 const path = require('path');
 const fs = require('fs');
+const bcrypt = require('bcryptjs');
 
 const DB_PATH = process.env.DB_PATH
   ? (path.isAbsolute(process.env.DB_PATH) ? process.env.DB_PATH : path.resolve(__dirname, '..', process.env.DB_PATH))
@@ -14,9 +15,18 @@ if (!fs.existsSync(dataDir)) {
 const db = new DatabaseSync(DB_PATH);
 
 db.exec('PRAGMA journal_mode = WAL;');
+db.exec('PRAGMA foreign_keys = ON;');
 
-// Ensure table exists
+// Ensure users and leads tables exist
 db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
   CREATE TABLE IF NOT EXISTS leads (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
@@ -27,9 +37,19 @@ db.exec(`
     status TEXT NOT NULL DEFAULT 'New' CHECK(status IN ('New', 'Contacted', 'Qualified', 'Lost')),
     notes TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE
   );
 `);
+
+// Ensure demo user exists
+let demoUser = db.prepare('SELECT id FROM users WHERE email = ?').get('demo@merucrm.com');
+if (!demoUser) {
+  const hash = bcrypt.hashSync('Password123!', 10);
+  const result = db.prepare('INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)')
+    .run('Demo Admin', 'demo@merucrm.com', hash);
+  demoUser = { id: Number(result.lastInsertRowid) };
+}
 
 const DEMO_LEADS = [
   {
@@ -133,12 +153,12 @@ const DEMO_LEADS = [
   },
 ];
 
-console.log(`Clearing existing leads from ${DB_PATH}...`);
-db.exec('DELETE FROM leads;');
+console.log(`Clearing existing demo leads from ${DB_PATH}...`);
+db.prepare('DELETE FROM leads WHERE user_id = ?').run(demoUser.id);
 
 const insertStmt = db.prepare(`
-  INSERT INTO leads (name, email, phone, company, source, status, notes)
-  VALUES (?, ?, ?, ?, ?, ?, ?)
+  INSERT INTO leads (name, email, phone, company, source, status, notes, user_id)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
 let count = 0;
@@ -150,10 +170,11 @@ for (const lead of DEMO_LEADS) {
     lead.company,
     lead.source,
     lead.status,
-    lead.notes
+    lead.notes,
+    demoUser.id
   );
   count++;
 }
 
-console.log(`Successfully seeded ${count} realistic demonstration leads into SQLite database.`);
+console.log(`Successfully seeded ${count} demonstration leads for user demo@merucrm.com (ID: ${demoUser.id}).`);
 db.close();

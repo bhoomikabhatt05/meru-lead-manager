@@ -1,4 +1,4 @@
-import { DashboardIcon, LeadsIcon, CloseIcon } from './Icons';
+import { DashboardIcon, LeadsIcon, CloseIcon, LogOutIcon } from './Icons';
 
 export function Sidebar({
   activeTab,
@@ -8,6 +8,8 @@ export function Sidebar({
   isOpen = false,
   onClose,
   onStatusQuickFilter,
+  user,
+  onLogout,
 }) {
   const statuses = [
     { key: 'New', label: 'New', color: 'var(--status-new-dot)', bg: 'var(--status-new-subtle)' },
@@ -15,6 +17,15 @@ export function Sidebar({
     { key: 'Qualified', label: 'Qualified', color: 'var(--status-qualified-dot)', bg: 'var(--status-qualified-subtle)' },
     { key: 'Lost', label: 'Lost', color: 'var(--status-lost-dot)', bg: 'var(--status-lost-subtle)' },
   ];
+
+  const initials = user?.name
+    ? user.name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
+    : 'U';
 
   return (
     <>
@@ -97,16 +108,37 @@ export function Sidebar({
           </div>
         </div>
 
-        {/* Footer / Account & Database Status */}
+        {/* Footer / User Profile & Database Status */}
         <div className="sidebar-footer">
-          <div className="user-profile-badge">
-            <div className="user-avatar">BB</div>
-            <div className="user-details">
-              <span className="user-name">Bhoomika Bhatt</span>
-              <span className="workspace-name">Meru Technosoft</span>
+          {user ? (
+            <div className="sidebar-user-card">
+              <div className="user-profile-badge">
+                <div className="user-avatar">{initials}</div>
+                <div className="user-details">
+                  <span className="user-name">{user.name}</span>
+                  <span className="workspace-name">{user.email}</span>
+                </div>
+              </div>
+              <button
+                className="btn-sidebar-logout"
+                onClick={onLogout}
+                title="Log out"
+                aria-label="Log out"
+              >
+                <LogOutIcon size={14} />
+              </button>
             </div>
-          </div>
-          <div className="db-status-pill" title="Persistent SQLite connection via node:sqlite">
+          ) : (
+            <div className="user-profile-badge">
+              <div className="user-avatar">M</div>
+              <div className="user-details">
+                <span className="user-name">Meru CRM</span>
+                <span className="workspace-name">Sales Team</span>
+              </div>
+            </div>
+          )}
+
+          <div className="db-status-pill" title="Persistent SQLite database via node:sqlite">
             <span className="db-status-dot" />
             <span>SQLite Active</span>
           </div>

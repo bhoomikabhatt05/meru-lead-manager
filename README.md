@@ -1,195 +1,219 @@
-# Meru Lead Manager
+# Meru Lead Manager CRM
 
-A full-stack CRM Lead Manager application built as part of the **Meru Technosoft Pvt. Ltd. Full Stack Developer Screening Assignment**.
+A production-grade, full-stack CRM Lead Manager application built for the **Meru Technosoft Pvt. Ltd. Full Stack Developer Screening Assignment**.
 
-> Built with **React 18 + Vite** (frontend), **Node.js + Express** (backend), and **SQLite** via Node.js built-in `node:sqlite` (`DatabaseSync`).
-
----
-
-## Features
-
-### Core (Required by Assignment)
-- ✅ **Add leads** with: `name`, `email`, `phone`, `company`, `source` (dropdown), and `status` (`New` / `Contacted` / `Qualified` / `Lost`).
-- ✅ **Display leads in a structured table** with status badges clearly displayed.
-- ✅ **Edit existing leads** via a responsive modal form.
-- ✅ **Delete leads** with a confirmation modal to prevent accidental data loss.
-- ✅ **Search and filter** leads across name, email, company, and phone numbers, with status and acquisition source filters.
-- ✅ **Comprehensive validation** on frontend (immediate inline feedback) and backend (**Zod** schema with field-level error messages).
-- ✅ **Persistent database storage** in SQLite.
-
-### Bonus Features, UI/UX Redesign & Apple HIG Usability
-- ✅ **Linear, Attio & Apple HIG-Inspired Application Shell**: Refined left sidebar navigation, brand identity, pipeline stage counters, and top header bar.
-- ✅ **Direct Manipulation KPI Cards**: All 5 KPI cards (Total, New, Contacted, Qualified, Lost) are interactive buttons with keyboard accessibility that filter the leads view with one click.
-- ✅ **Interactive Dashboard Visualizations**:
-  - SVG Donut Chart with clickable arc segments and legend items that filter the pipeline by status.
-  - Ranked acquisition channel progress bars that navigate to filtered source lists on click.
-  - Recent Leads activity table with row-click progressive disclosure.
-- ✅ **Progressive Disclosure: Lead Details Drawer**: Slide-over panel revealing comprehensive contact information, direct manipulation quick status switcher, one-click email/phone clipboard copy, notes block, and system timestamps.
-- ✅ **Unsaved Changes Protection**: Smart dirty-state detection prompts confirmation before discarding edits if the modal is dismissed via Esc, backdrop, or cancel.
-- ✅ **Advanced Data Management Toolbar**: Multi-field search with keyboard shortcut hint, segmented status tabs, acquisition channel filter dropdown, active filter pill badges with one-click removal, and page size selector.
-- ✅ **Keyboard Accessibility**: `N` to create a new lead, `/` or `⌘K` to focus search, and `Esc` to close modals and slide-over drawers.
-- ✅ **Demonstration Data Seed Script**: `npm run seed` populates 11 realistic leads across all 4 statuses and 6 sources for immediate evaluation.
-- ✅ **Sorting & Pagination** on the leads table with configurable page size (10, 25, 50).
-- ✅ **Automated API test suite** using **Jest** and **Supertest** (19 tests, 100% passing).
-- ✅ **Toast notifications** for all CRUD operations.
+> **Architecture:** **React 18 + Vite** (frontend), **Node.js + Express** (backend), and **SQLite** via Node.js built-in `node:sqlite` (`DatabaseSync`) with **JWT + HTTP-Only Cookie Authentication** and **Multi-Tenant Data Isolation**.
 
 ---
 
-## Technology Stack
+## 1. Project Overview
 
-| Layer      | Technology | Notes |
-|------------|------------|-------|
-| Frontend   | React 18, Vite 5 | Modular components, custom hooks (`useLeads`, `useToast`) |
-| Styling    | Plain CSS (Custom Design System) | Clean, minimal SaaS aesthetic with responsive layouts |
-| Backend    | Node.js (Express 4) | Layered architecture: routes, controllers, validators, middleware |
-| Database   | SQLite (via `node:sqlite`) | Built-in Node.js `DatabaseSync` — zero external native C++ build dependencies |
-| Validation | Zod 3.22 (backend), Custom JS (frontend) | Synchronized schema validation with field-level error mapping |
-| Testing    | Jest 29 + Supertest 7 | 19 automated tests covering CRUD, validations, pagination, and stats |
-| Language   | JavaScript | ES modules on client, CommonJS on server |
+Meru Lead Manager is an intentional, high-density B2B sales pipeline CRM inspired by Linear, Attio, and Apple Human Interface Guidelines. It manages the entire lead lifecycle—from capture and qualification to conversion or loss—while providing real-time pipeline analytics, direct manipulation controls, progressive disclosure drawers, and authenticated multi-tenant user isolation.
 
 ---
 
-## Project Structure
+## 2. Features
+
+### Core Requirements (Mandatory)
+- ✅ **Add Leads:** Capture `name`, `email`, `phone`, `company`, `source` (dropdown), `status` (`New`, `Contacted`, `Qualified`, `Lost`), and optional `notes`.
+- ✅ **Structured Data Table:** Sortable columns, responsive alignments, status badges, and hover actions.
+- ✅ **Edit Existing Leads:** Modal editing with pre-filled state, dirty checking, and real-time backend synchronization.
+- ✅ **Delete Leads:** Safe confirmation modal preventing accidental data destruction.
+- ✅ **Multi-Field Search & Filter:** Real-time search across `name`, `email`, `company`, and `phone`, combined with status and acquisition source filters.
+- ✅ **Rigorous Dual-Layer Validation:** Synchronized client-side inline validation and server-side **Zod** schema validation with field-specific error messages.
+- ✅ **Persistent SQLite Database:** Built-in `node:sqlite` with WAL mode and foreign key constraints.
+
+### Authentication & Multi-Tenant Isolation (Optional Requirement Implemented)
+- ✅ **Secure Signup:** Full name, email, password, and confirm password validation.
+- ✅ **Bcrypt Password Hashing:** Passwords hashed with salt rounds (never stored in plaintext, never exposed in responses).
+- ✅ **Secure Session Handling:** HTTP-only, SameSite cookies with JWT tokens (`credentials: 'include'`). Tokens and passwords are never stored in `localStorage`.
+- ✅ **User-Specific Lead Ownership:** Every lead is associated with an authenticated `user_id`.
+- ✅ **Cross-User Data Isolation:** Users only see, search, edit, delete, and aggregate statistics for their own leads. Cross-user modification attempts return strict 403 / 404 responses.
+- ✅ **Safe Data Migration:** Existing leads are preserved and assigned to a default demo account (`demo@merucrm.com`). Zero data loss.
+- ✅ **One-Click Demo Access:** Pre-configured demo login button on the authentication screen for instant evaluation.
+
+### Interaction Design, UI/UX & Apple HIG Usability
+- ✅ **Direct Manipulation KPI Cards:** All 5 dashboard KPI cards (Total, New, Contacted, Qualified, Lost) act as interactive buttons that filter the pipeline in one click.
+- ✅ **Interactive SVG Donut Chart:** Clickable arc segments and legend items that filter the leads table by stage.
+- ✅ **Ranked Acquisition Channel Bars:** Clickable bars that filter the leads table by source.
+- ✅ **Progressive Disclosure (Lead Details Drawer):** Slide-over panel revealing complete contact information, click-to-copy email/phone, direct manipulation status changer, notes context, and system timestamps.
+- ✅ **Unsaved Changes Protection:** Modal dirty-state detection warns before discarding edits if dismissed via `Esc`, backdrop, or cancel.
+- ✅ **Keyboard Accessibility:** Global shortcuts (`N` for new lead, `/` or `⌘K` to focus search, `Esc` to close modals and drawers).
+- ✅ **Active Filter Tags:** One-click dismissible filter tags with a "Clear All" reset action.
+
+---
+
+## 3. Technology Stack
+
+| Layer | Technology | Details |
+|---|---|---|
+| **Frontend** | React 18, Vite 5 | Functional components, custom hooks (`useAuth`, `useLeads`, `useToast`) |
+| **Styling** | Pure CSS (Custom Design System) | Linear/Attio-inspired design tokens, Apple HIG interaction micro-states |
+| **Backend** | Node.js 24 (Express 4) | Layered architecture: routes, controllers, middleware, validators |
+| **Database** | SQLite via `node:sqlite` | Node.js built-in `DatabaseSync` — zero external C++ build dependencies |
+| **Authentication** | JWT (`jsonwebtoken`) + `bcryptjs` | HTTP-only cookies, SameSite protection, bcrypt salted hashing |
+| **Validation** | Zod 3.22 | Strict schema validation for leads and user authentication |
+| **Automated Testing** | Jest 29 + Supertest 7 | **36 automated tests** (100% passing) covering auth, CRUD, isolation |
+| **Containerization** | Docker, Docker Compose | Multi-stage production build with persistent volume storage |
+
+---
+
+## 4. Frontend & Backend Architecture
 
 ```
 meru-lead-manager/
-├── client/                   # React + Vite frontend
+├── client/                     # Frontend Application (React 18 + Vite)
 │   ├── src/
-│   │   ├── api/
-│   │   │   └── leadsApi.js   # Fetch API wrapper for backend endpoints
-│   │   ├── components/
-│   │   │   ├── App.jsx           # Root layout and state orchestration
-│   │   │   ├── Dashboard.jsx     # Pipeline stats and status/source breakdown
-│   │   │   ├── LeadsTable.jsx    # Sortable data table
-│   │   │   ├── LeadForm.jsx      # Create/edit modal with validation
-│   │   │   ├── ConfirmDialog.jsx # Confirmation dialog for lead deletion
-│   │   │   ├── Pagination.jsx    # Page navigation controls
-│   │   │   ├── StatusBadge.jsx   # Status badges (New, Contacted, Qualified, Lost)
-│   │   │   └── Toast.jsx         # Toast notification system
-│   │   ├── hooks/
-│   │   │   ├── useLeads.js       # Custom hook for leads state and queries
-│   │   │   └── useToast.js       # Custom hook for toast alerts
+│   │   ├── api/                # API Client Services
+│   │   │   ├── authApi.js      # Authentication endpoints (credentials: include)
+│   │   │   └── leadsApi.js     # Scoped leads CRUD and stats endpoints
+│   │   ├── components/         # Modular UI Components
+│   │   │   ├── AuthScreen.jsx  # Sign-in & Sign-up interface with 1-click demo
+│   │   │   ├── ConfirmDialog.jsx# Deletion confirmation sheet
+│   │   │   ├── Dashboard.jsx   # Interactive analytics, SVG donut & channel bars
+│   │   │   ├── Header.jsx      # Top header with user profile & sign-out
+│   │   │   ├── Icons.jsx       # SVG iconography
+│   │   │   ├── LeadDetailDrawer.jsx # Slide-over progressive disclosure sheet
+│   │   │   ├── LeadForm.jsx    # Create/edit modal with dirty check & char counter
+│   │   │   ├── LeadsTable.jsx  # Sortable table with row-click inspection
+│   │   │   ├── Pagination.jsx  # Offset & limit pagination controls
+│   │   │   ├── Sidebar.jsx     # Navigation shell & pipeline stage counters
+│   │   │   ├── StatusBadge.jsx # Color-coded status pills
+│   │   │   └── Toast.jsx       # Floating notification system
+│   │   ├── hooks/              # Custom React Hooks
+│   │   │   ├── useAuth.js      # Session & user lifecycle management
+│   │   │   ├── useLeads.js     # Query state, filtering, and CRUD operations
+│   │   │   └── useToast.js     # Transient notification queue
 │   │   ├── styles/
-│   │   │   └── globals.css       # Complete SaaS design system
-│   │   ├── utils.js              # Shared constants and form validation
-│   │   └── main.jsx              # React application entry point
+│   │   │   └── globals.css     # Unified SaaS design system & Apple HIG rules
+│   │   ├── App.jsx             # Top-level state and route orchestrator
+│   │   └── utils.js            # Shared constants, statuses, and validation rules
 │   ├── index.html
-│   ├── vite.config.js        # Vite config with /api reverse proxy to port 5001
-│   └── package.json
+│   └── vite.config.js          # Reverse proxy /api to backend port 5001
 │
-├── server/                   # Node.js + Express backend
+├── server/                     # Backend API (Node.js + Express)
 │   ├── src/
-│   │   ├── index.js              # Server entry point (Port 5001)
-│   │   ├── app.js                # Express app setup and middleware
-│   │   ├── database.js           # SQLite connection & schema via node:sqlite
-│   │   ├── routes/
-│   │   │   └── leads.js          # REST API route declarations
 │   │   ├── controllers/
-│   │   │   └── leadsController.js# Query building, CRUD handlers, stats
+│   │   │   ├── authController.js   # Signup, login, logout, session profile
+│   │   │   └── leadsController.js  # User-scoped leads queries & aggregations
 │   │   ├── middleware/
-│   │   │   ├── validate.js       # Zod validation middleware
-│   │   │   └── errorHandler.js   # Global centralized error handler
-│   │   └── validators/
-│   │       └── leadValidator.js  # Zod validation schemas
+│   │   │   ├── auth.js             # HTTP-only cookie JWT verification
+│   │   │   ├── errorHandler.js     # Centralized error mapping
+│   │   │   └── validate.js         # Zod schema validation middleware
+│   │   ├── routes/
+│   │   │   ├── auth.js             # Auth endpoints (/api/auth)
+│   │   │   └── leads.js            # Leads endpoints (/api/leads)
+│   │   ├── validators/
+│   │   │   ├── authValidator.js    # Zod signup/login schemas
+│   │   │   └── leadValidator.js    # Zod lead CRUD schemas
+│   │   ├── app.js                  # Express setup, CORS, cookie-parser, routes
+│   │   ├── database.js             # SQLite DatabaseSync connection & migrations
+│   │   ├── index.js                # Server entry point (Port 5001)
+│   │   └── seed.js                 # Realistic demonstration seed script
 │   ├── __tests__/
-│   │   └── leads.test.js         # 18 automated tests (Jest + Supertest)
-│   ├── data/                     # SQLite database directory (gitignored)
-│   ├── .env                      # Environment config (gitignored)
-│   ├── .env.example              # Safe environment template
+│   │   ├── auth.test.js            # Authentication & cross-user isolation tests
+│   │   └── leads.test.js           # CRUD, search, filter, pagination, stats tests
+│   ├── data/                       # Local SQLite storage (gitignored)
 │   └── package.json
 │
-├── .gitignore                # Excludes node_modules, .env, *.db, dist
-├── .env.example
+├── .env.example                # Documented environment template
+├── Dockerfile                  # Multi-stage production container
+├── docker-compose.yml          # Persistent volume local runner
+├── render.yaml                 # Render Blueprint with 1GB persistent disk
+├── package.json                # Unified workspace build and test scripts
 └── README.md
 ```
 
 ---
 
-## Database Design
+## 5. Database Schema & Migration
 
-**Table: `leads`**
+### Schema Diagram
 
-| Column      | Type    | Constraints | Description |
-|-------------|---------|-------------|-------------|
-| `id`        | INTEGER | PRIMARY KEY AUTOINCREMENT | Unique lead identifier |
-| `name`      | TEXT    | NOT NULL | Lead full name |
-| `email`     | TEXT    | NOT NULL, UNIQUE | Lead email (unique constraint) |
-| `phone`     | TEXT    | NOT NULL | Contact phone number |
-| `company`   | TEXT    | NOT NULL | Company or organization name |
-| `source`    | TEXT    | NOT NULL, CHECK constraint | One of 6 sources |
-| `status`    | TEXT    | NOT NULL, DEFAULT 'New', CHECK constraint | One of 4 statuses |
-| `notes`     | TEXT    | NULLABLE | Optional notes or remarks |
-| `created_at`| TEXT    | NOT NULL, DEFAULT (datetime('now')) | ISO creation timestamp |
-| `updated_at`| TEXT    | NOT NULL, DEFAULT (datetime('now')) | ISO updated timestamp |
+```
+┌─────────────────────────────────┐
+│              users              │
+├─────────────────────────────────┤
+│ id            INTEGER (PK AUTO) │
+│ name          TEXT NOT NULL     │
+│ email         TEXT NOT NULL (UQ)│
+│ password_hash TEXT NOT NULL     │
+│ created_at    TEXT NOT NULL     │
+└─────────────────────────────────┘
+                 │
+                 │ 1:N (ON DELETE CASCADE)
+                 ▼
+┌────────────────────────────────────────────────────────┐
+│                         leads                          │
+├────────────────────────────────────────────────────────┤
+│ id          INTEGER PRIMARY KEY AUTOINCREMENT          │
+│ name        TEXT NOT NULL                              │
+│ email       TEXT NOT NULL UNIQUE                       │
+│ phone       TEXT NOT NULL                              │
+│ company     TEXT NOT NULL                              │
+│ source      TEXT NOT NULL CHECK(source IN (...))       │
+│ status      TEXT NOT NULL CHECK(status IN (...))       │
+│ notes       TEXT                                       │
+│ created_at  TEXT NOT NULL DEFAULT (datetime('now'))    │
+│ updated_at  TEXT NOT NULL DEFAULT (datetime('now'))    │
+│ user_id     INTEGER REFERENCES users(id)               │
+└────────────────────────────────────────────────────────┘
+```
+
+**Indexes:**
+- `idx_leads_user_id` on `leads(user_id)` for high-performance scoped lookups.
 
 **Allowed Sources:** `Website`, `Referral`, `Social Media`, `Email Campaign`, `Cold Call`, `Other`  
 **Allowed Statuses:** `New`, `Contacted`, `Qualified`, `Lost`
 
+### Migration Strategy
+The database initializer automatically inspects `PRAGMA table_info(leads)`:
+1. If the `user_id` column does not exist, it runs `ALTER TABLE leads ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;`.
+2. Existing unassigned records are automatically associated with the default administrative account (`demo@merucrm.com`), ensuring **zero data loss**.
+
 ---
 
-## API Endpoints
+## 6. Authentication Design
+
+1. **Password Hashing:** Passwords are salted and hashed using `bcryptjs` with 10 rounds. Password hashes are never returned across API boundaries.
+2. **Session Storage:** A signed JSON Web Token (JWT) is issued upon signup/login and transmitted via an `httpOnly`, `sameSite: 'lax'` cookie. This protects tokens against XSS attacks.
+3. **Multi-Tenant Ownership:** Every SQL query executed in `leadsController.js` includes an explicit `user_id = ?` clause derived directly from the verified token payload (`req.user.id`).
+4. **Access Control:** Attempting to retrieve, update, or delete another user's lead returns a 403 Forbidden or 404 Not Found error, preventing unauthorized enumeration.
+
+---
+
+## 7. API Endpoint Documentation
 
 Base URL: `http://localhost:5001/api`
 
+### Authentication Endpoints (`/api/auth`)
+
+| Method | Endpoint | Description | Auth Required |
+|---|---|---|---|
+| `POST` | `/auth/signup` | Register new user; sets HTTP-only auth cookie | No |
+| `POST` | `/auth/login` | Authenticate credentials; sets HTTP-only cookie | No |
+| `POST` | `/auth/logout` | Clears HTTP-only auth cookie | No |
+| `GET` | `/auth/me` | Fetch authenticated user profile | **Yes** |
+
+### Leads Endpoints (`/api/leads`) — *All endpoints scoped to authenticated user*
+
 | Method | Endpoint | Description | Query Parameters |
-|--------|----------|-------------|------------------|
-| `GET`  | `/leads` | List leads (paginated, sorted, filtered) | `search`, `status`, `sortBy`, `sortOrder`, `page`, `limit` |
-| `GET`  | `/leads/stats` | Summary statistics and pipeline counts | — |
-| `GET`  | `/leads/:id` | Fetch a single lead by ID | — |
-| `POST` | `/leads` | Create a new lead | — |
-| `PUT`  | `/leads/:id` | Update an existing lead | — |
-| `DELETE` | `/leads/:id` | Delete a lead | — |
-| `GET`  | `/health` | Server health check endpoint | — |
-
-### Example — Create Lead Request
-```http
-POST /api/leads
-Content-Type: application/json
-
-{
-  "name": "Jane Doe",
-  "email": "jane@acme.com",
-  "phone": "+91 98765 43210",
-  "company": "Acme Corp",
-  "source": "Website",
-  "status": "New",
-  "notes": "Interested in enterprise CRM deployment"
-}
-```
-
-### Example — List Leads Response
-```json
-{
-  "data": [
-    {
-      "id": 1,
-      "name": "Jane Doe",
-      "email": "jane@acme.com",
-      "phone": "+91 98765 43210",
-      "company": "Acme Corp",
-      "source": "Website",
-      "status": "New",
-      "notes": "Interested in enterprise CRM deployment",
-      "created_at": "2026-11-22 01:00:00",
-      "updated_at": "2026-11-22 01:00:00"
-    }
-  ],
-  "pagination": {
-    "total": 1,
-    "page": 1,
-    "limit": 10,
-    "totalPages": 1
-  }
-}
-```
+|---|---|---|---|
+| `GET` | `/leads` | List user's leads (paginated, sorted, filtered) | `search`, `status`, `source`, `sortBy`, `sortOrder`, `page`, `limit` |
+| `GET` | `/leads/stats` | Pipeline metrics and status/source breakdown | — |
+| `GET` | `/leads/:id` | Fetch single lead by ID | — |
+| `POST` | `/leads` | Create a lead associated with current user | — |
+| `PUT` | `/leads/:id` | Update lead details (ownership enforced) | — |
+| `DELETE` | `/leads/:id` | Delete lead (ownership enforced) | — |
+| `GET` | `/health` | Server health check endpoint | No |
 
 ---
 
-## Installation & Setup
+## 8. Local Setup Instructions
 
 ### Prerequisites
-- **Node.js**: **Node.js 22.5.0+** required for native `node:sqlite` (`DatabaseSync`). **Tested on Node.js 24.19.0**.
-- **npm**: 9+
+- **Node.js:** Node.js 22.5.0+ (Tested on **Node.js 24.19.0**)
+- **npm:** 9+
 - **Git**
 
 ### 1. Clone the repository
@@ -198,117 +222,166 @@ git clone https://github.com/bhoomikabhatt05/meru-lead-manager.git
 cd meru-lead-manager
 ```
 
-### 2. Backend setup
+### 2. Install dependencies
 ```bash
-cd server
-cp .env.example .env     # Defaults work out of the box
-npm install
+# Install root, backend, and frontend packages
+npm run install:all
 ```
 
-### 3. Frontend setup
+### 3. Environment configuration
 ```bash
-cd ../client
-npm install
+cp .env.example .env
+cp .env.example server/.env
 ```
 
----
-
-## Running the Application
-
-### Start the Backend (Terminal 1)
+### 4. (Optional) Seed demonstration data
 ```bash
-cd server
-npm run dev       # Development with nodemon auto-reload
-# or
-npm start         # Production mode
-
-# (Optional) Seed realistic demonstration leads (11 records across all 4 statuses):
 npm run seed
 ```
-*Server starts on **http://localhost:5001** (using port 5001 avoids macOS AirPlay port 5000 collisions).*
+*Seeds 11 realistic leads assigned to the demo account (`demo@merucrm.com` / `Password123!`).*
 
-### Start the Frontend (Terminal 2)
+### 5. Start the development servers
 ```bash
-cd client
-npm run dev
+# Terminal 1: Backend API (Port 5001)
+npm run server
+
+# Terminal 2: Frontend App (Port 5173)
+npm run client
 ```
-*Frontend starts on **http://localhost:5173** (Vite proxies all `/api` calls directly to `http://localhost:5001`).*
+Open **http://localhost:5173** in your browser.
 
 ---
 
-## Environment Configuration
+## 9. Environment Variables
 
-**`server/.env`** (template available in `.env.example`):
-```env
-PORT=5001                         # Express server port (avoids macOS AirPlay port 5000 conflict)
-NODE_ENV=development              # Environment mode
-DB_PATH=./data/leads.db           # SQLite database file path
-CLIENT_URL=http://localhost:5173  # Allowed CORS origin
-```
-
-The database directory and SQLite database file are initialized automatically when the server boots.
+| Variable | Default Value | Description |
+|---|---|---|
+| `PORT` | `5001` | Express server port (avoids macOS AirPlay port 5000 conflict) |
+| `NODE_ENV` | `development` | Environment mode (`development`, `production`, `test`) |
+| `DB_PATH` | `./data/leads.db` | Path to SQLite database file |
+| `JWT_SECRET` | *(Secure string)* | Secret key for signing session JWTs |
+| `CLIENT_URL` | `http://localhost:5173` | Allowed CORS origin |
 
 ---
 
-## Running Tests
+## 10. Automated Testing
 
+Run the complete test suite:
 ```bash
-cd server
 npm test
 ```
 
 ### Verified Test Results
-- **Test Framework**: Jest 29 + Supertest 7
-- **Test Suite**: `server/__tests__/leads.test.js`
-- **Result**: **19 passed, 19 total (100% passing)**
-- **Execution Time**: ~0.35 seconds
+- **Test Framework:** Jest 29 + Supertest 7
+- **Test Suites:** `server/__tests__/auth.test.js`, `server/__tests__/leads.test.js`
+- **Result:** **36 passed, 36 total (100% passing)**
 
-**Covered Scenarios:**
-1. Health check returns 200 OK.
-2. Lead creation with valid fields and default status `New`.
-3. Lead creation across all 4 valid assignment statuses: `New`, `Contacted`, `Qualified`, `Lost`.
-4. Rejection of missing mandatory fields (Zod validation).
-5. Rejection of invalid email formats.
-6. Rejection of unsupported or legacy status values.
-7. Rejection of duplicate email addresses (unique constraint).
-8. List retrieval with pagination metadata.
-9. Multi-column search filter (name, email, company, and phone).
-10. Status filter (`status=Lost`).
-11. Acquisition source filter (`source=Referral`).
-12. Single lead retrieval by ID.
-13. 404 response on non-existent lead ID.
-14. Lead updates (PUT) with validation.
-15. 404 response on update to non-existent ID.
-16. Lead deletion (DELETE) with SQLite row removal.
-17. 404 response on deletion of non-existent ID.
-18. Dashboard stats aggregation across all 4 statuses.
-19. Pagination offsets and limits.
+```
+PASS __tests__/auth.test.js
+  User Authentication & Authorization Suite
+    Registration (POST /api/auth/signup)
+      ✓ successfully registers a new user with hashed password and sets auth cookie
+      ✓ rejects duplicate email registrations with 409 Conflict
+      ✓ rejects invalid email formats
+      ✓ rejects mismatched confirm password
+      ✓ rejects passwords shorter than 6 characters
+    Login (POST /api/auth/login)
+      ✓ logs in successfully with correct credentials and returns user and cookie
+      ✓ rejects incorrect password with 401 Unauthorized
+      ✓ rejects non-existent email with 401 Unauthorized
+    Session & Profile (GET /api/auth/me & POST /api/auth/logout)
+      ✓ GET /api/auth/me returns authenticated user when valid cookie is provided
+      ✓ GET /api/auth/me rejects unauthenticated request with 401
+      ✓ POST /api/auth/logout clears auth cookie
+    Multi-User Lead Data Isolation (Cross-User Protection)
+      ✓ User 2 cannot see User 1 leads in the list view (GET /api/leads)
+      ✓ User 2 cannot retrieve User 1 lead by ID (GET /api/leads/:id)
+      ✓ User 2 cannot modify User 1 lead (PUT /api/leads/:id)
+      ✓ User 2 cannot delete User 1 lead (DELETE /api/leads/:id)
+      ✓ Dashboard stats are isolated per user (GET /api/leads/stats)
+      ✓ Rejects unauthenticated API access to /api/leads with 401
+
+PASS __tests__/leads.test.js
+  Health Check
+    ✓ GET /api/health should return 200
+  Lead CRUD Operations
+    ✓ POST /api/leads - creates a new lead
+    ✓ POST /api/leads - supports all 4 valid statuses: New, Contacted, Qualified, Lost
+    ✓ POST /api/leads - rejects missing required fields
+    ✓ POST /api/leads - rejects invalid email
+    ✓ POST /api/leads - rejects invalid or unsupported status
+    ✓ POST /api/leads - rejects duplicate email
+    ✓ GET /api/leads - returns list of leads
+    ✓ GET /api/leads - supports search by name, email, company, and phone
+    ✓ GET /api/leads - supports filter by status
+    ✓ GET /api/leads - supports filter by acquisition source
+    ✓ GET /api/leads/:id - returns single lead
+    ✓ GET /api/leads/:id - returns 404 for non-existent lead
+    ✓ PUT /api/leads/:id - updates a lead status and details
+    ✓ PUT /api/leads/:id - returns 404 for non-existent lead
+    ✓ DELETE /api/leads/:id - deletes a lead
+    ✓ DELETE /api/leads/:id - returns 404 for non-existent lead
+  Stats Endpoint
+    ✓ GET /api/leads/stats - returns statistics for all 4 statuses
+  Pagination
+    ✓ GET /api/leads - supports pagination with limit and page offsets
+
+Test Suites: 2 passed, 2 total
+Tests:       36 passed, 36 total (100% passing)
+```
 
 ---
 
-## Production Build Verification
+## 11. Production Build & Deployment
 
+### Production Build
 ```bash
-cd client
 npm run build
 ```
-Vite transforms and bundles all 42 modules into `client/dist/` without errors or warnings.
+Vite bundles the frontend into `client/dist`. In production (`NODE_ENV=production`), Express automatically serves this build, enabling single-service hosting.
+
+### Production Deployment Architecture (with SQLite Persistence)
+
+> [!IMPORTANT]
+> Standard container deployments (like free-tier Heroku or basic serverless) use ephemeral filesystems where SQLite databases are wiped on redeploys. To maintain durable persistence, Meru Lead Manager must be deployed with a mounted persistent disk volume.
+
+#### Option A: Render.com (Recommended with Blueprint)
+A production Blueprint is included in `render.yaml`.
+1. Push code to your GitHub repository.
+2. In the [Render Dashboard](https://dashboard.render.com), click **New +** > **Blueprint**.
+3. Select your repository.
+4. Render provisions a Web Service with a **1GB Persistent Disk** mounted at `/var/data` where `leads.db` resides.
+
+#### Option B: Docker Container with Persistent Volume
+```bash
+# Build and run container with durable SQLite volume
+docker-compose up --build -d
+```
+The database persists inside the named volume `meru_sqlite_data`.
 
 ---
 
-## Assumptions & Design Choices
+## 12. Assumptions Made
 
-1. **Email Uniqueness**: Each lead is required to have a unique email address to avoid duplicate records.
-2. **Four Assignment Statuses**: The application adheres strictly to the four statuses specified in the assignment PDF: `New`, `Contacted`, `Qualified`, and `Lost`.
-3. **Database Architecture**: Node.js's built-in `node:sqlite` (`DatabaseSync`) was used instead of third-party native addons like `better-sqlite3`, eliminating compilation issues and external toolchain requirements.
-4. **Port 5001 Choice**: macOS Monterey and later reserve port 5000 for the AirPlay Receiver daemon. Setting the default backend port to 5001 ensures out-of-the-box compatibility without requiring users to disable system services.
-5. **No Authentication**: The core assignment focuses on clean CRUD, API design, validation, and database reliability. Authentication was omitted in favor of keeping the core architecture solid and maintainable.
+1. **Email Uniqueness per Database:** To prevent ambiguous contact records across common outreach tools, lead emails are unique.
+2. **Assignment Status Alignment:** Lead statuses strictly adhere to the assignment specification: `New`, `Contacted`, `Qualified`, and `Lost`.
+3. **Session Delivery:** HTTP-only cookies are preferred for web clients to neutralize cross-site scripting (XSS) risks.
+4. **Port 5001 Default:** Selected to avoid conflicts with macOS AirPlay Receiver running on port 5000.
 
 ---
 
-## What was Challenging or Interesting
+## 13. Future Improvements (With More Time)
 
-The most interesting technical decision was choosing Node.js's built-in `node:sqlite` module over external database packages. On newer Node.js releases (v22.5.0+ and v24), legacy C++ compilation via `node-gyp` often encounters compiler header mismatches with Xcode Clang on macOS. Leveraging `node:sqlite` provided the exact same synchronous prepared-statement performance with zero external native build dependencies. Another rewarding aspect was building a dynamic SQL query builder in the controller that safely combines multi-column search, status filters, sorting, and pagination while strictly parameterizing user inputs to eliminate SQL injection risks.
+1. **CSV / Excel Bulk Import & Export:** Enabling one-click export and bulk CSV upload.
+2. **Activity Timeline & Audit Log:** Tracking timestamps when a lead moves across pipeline stages.
+3. **Role-Based Access Control (RBAC):** Admin vs. Sales Rep roles with team-wide manager views.
+4. **Automated End-to-End Testing:** Playwright or Cypress browser integration tests.
+
+---
+
+## 14. An Interesting Technical Challenge & Solution
+
+> Selecting Node.js's native `node:sqlite` module was one of the most rewarding architecture choices of this project. While legacy libraries like `better-sqlite3` require compiling native C++ addons via `node-gyp` (which frequently fails on modern Node.js v24 due to Clang C++20 header incompatibilities), `node:sqlite` provided identical synchronous prepared-statement performance with zero native build dependencies. Implementing multi-tenant data isolation required ensuring every single query—from pagination counts and multi-column searches to dashboard aggregations and record updates—strictly bound `user_id = req.user.id`. Verifying this through 17 dedicated authorization tests confirmed that data leaks between users are completely eliminated at the query level.
 
 ---
 

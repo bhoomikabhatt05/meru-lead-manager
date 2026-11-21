@@ -2,10 +2,12 @@ const db = require('../database');
 
 /**
  * GET /api/leads
- * Supports: search, status filter, sort, pagination
+ * Scoped to authenticated user (req.user.id)
+ * Supports: search, status filter, source filter, sort, pagination
  */
 function getLeads(req, res, next) {
   try {
+    const userId = req.user.id;
     const {
       search = '',
       status = '',
@@ -25,8 +27,9 @@ function getLeads(req, res, next) {
     const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 10));
     const offset = (pageNum - 1) * limitNum;
 
-    const conditions = [];
-    const params = [];
+    // Scoped strictly to the authenticated user
+    const conditions = ['user_id = ?'];
+    const params = [userId];
 
     if (search.trim()) {
       conditions.push(`(name LIKE ? OR email LIKE ? OR company LIKE ? OR phone LIKE ?)`);
@@ -44,9 +47,9 @@ function getLeads(req, res, next) {
       params.push(source.trim());
     }
 
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const whereClause = `WHERE ${conditions.join(' AND ')}`;
 
-    // Count total matching records
+    // Count total matching records for this user
     const countStmt = db.prepare(`SELECT COUNT(*) as total FROM leads ${whereClause}`);
     const { total } = countStmt.get(...params);
 
@@ -72,19 +75,22 @@ function getLeads(req, res, next) {
 
 /**
  * GET /api/leads/stats
- * Returns dashboard statistics
+ * Returns dashboard statistics scoped to authenticated user
  */
 function getStats(req, res, next) {
   try {
-    const total = db.prepare('SELECT COUNT(*) as count FROM leads').get().count;
+    const userId = req.user.id;
+
+    const totalStmt = db.prepare('SELECT COUNT(*) as count FROM leads WHERE user_id = ?').get(userId);
+    const total = totalStmt ? totalStmt.count : 0;
 
     const statusCounts = db.prepare(
-      `SELECT status, COUNT(*) as count FROM leads GROUP BY status`
-    ).all();
+      `SELECT status, COUNT(*) as count FROM leads WHERE user_id = ? GROUP BY status`
+    ).all(userId);
 
     const sourceCounts = db.prepare(
-      `SELECT source, COUNT(*) as count FROM leads GROUP BY source ORDER BY count DESC`
-    ).all();
+      `SELECT source, COUNT(*) as count FROM leads WHERE user_id = ? GROUP BY source ORDER BY count DESC`
+    ).all(userId);
 
     res.json({
       total,
@@ -101,13 +107,17 @@ function getStats(req, res, next) {
 
 /**
  * GET /api/leads/:id
+ * Scoped to authenticated user
  */
 function getLeadById(req, res, next) {
   try {
-    const lead = db.prepare('SELECT * FROM leads WHERE id = ?').get(req.params.id);
+    const userId = req.user.id;
+    const lead = db.prepare('SELECT * FROM leads WHERE id = ? AND user_id = ?').get(req.params.id, userId);
+
     if (!lead) {
       return res.status(404).json({ error: 'Lead not found' });
     }
+
     res.json(lead);
   } catch (err) {
     next(err);
@@ -116,30 +126,34 @@ function getLeadById(req, res, next) {
 
 /**
  * POST /api/leads
+ * Scoped to authenticated user
  */
 function createLead(req, res, next) {
   try {
+    const userId = req.user.id;
     const { name, email, phone, company, source, status, notes } = req.body;
+    const cleanEmail = email.trim().toLowerCase();
 
-    // Check for duplicate email
-    const existing = db.prepare('SELECT id FROM leads WHERE email = ?').get(email.trim().toLowerCase());
+    // Check for duplicate email across leads
+    const existing = db.prepare('SELECT id FROM leads WHERE email = ?').get(cleanEmail);
     if (existing) {
       return res.status(409).json({ error: 'A lead with this email already exists' });
     }
 
     const stmt = db.prepare(`
-      INSERT INTO leads (name, email, phone, company, source, status, notes)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO leads (name, email, phone, company, source, status, notes, user_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const result = stmt.run(
       name.trim(),
-      email.trim().toLowerCase(),
+      cleanEmail,
       phone.trim(),
       company.trim(),
       source,
       status || 'New',
-      notes?.trim() || null
+      notes?.trim() || null,
+      userId
     );
 
     const newLead = db.prepare('SELECT * FROM leads WHERE id = ?').get(result.lastInsertRowid);
@@ -154,24 +168,30 @@ function createLead(req, res, next) {
 
 /**
  * PUT /api/leads/:id
+ * Scoped to authenticated user
  */
 function updateLead(req, res, next) {
   try {
+    const userId = req.user.id;
     const { id } = req.params;
+
     const lead = db.prepare('SELECT * FROM leads WHERE id = ?').get(id);
 
     if (!lead) {
       return res.status(404).json({ error: 'Lead not found' });
     }
 
+    // Authorization check: User cannot update another user's lead
+    if (lead.user_id !== userId) {
+      return res.status(403).json({ error: 'Access denied. You do not have permission to modify this lead.' });
+    }
+
     const { name, email, phone, company, source, status, notes } = req.body;
 
     // Check for duplicate email (excluding current lead)
     if (email) {
-      const existing = db.prepare('SELECT id FROM leads WHERE email = ? AND id != ?').get(
-        email.trim().toLowerCase(),
-        id
-      );
+      const cleanEmail = email.trim().toLowerCase();
+      const existing = db.prepare('SELECT id FROM leads WHERE email = ? AND id != ?').get(cleanEmail, id);
       if (existing) {
         return res.status(409).json({ error: 'A lead with this email already exists' });
       }
@@ -190,8 +210,18 @@ function updateLead(req, res, next) {
     db.prepare(`
       UPDATE leads
       SET name = ?, email = ?, phone = ?, company = ?, source = ?, status = ?, notes = ?, updated_at = datetime('now')
-      WHERE id = ?
-    `).run(updated.name, updated.email, updated.phone, updated.company, updated.source, updated.status, updated.notes, id);
+      WHERE id = ? AND user_id = ?
+    `).run(
+      updated.name,
+      updated.email,
+      updated.phone,
+      updated.company,
+      updated.source,
+      updated.status,
+      updated.notes,
+      id,
+      userId
+    );
 
     const updatedLead = db.prepare('SELECT * FROM leads WHERE id = ?').get(id);
     res.json(updatedLead);
@@ -205,21 +235,36 @@ function updateLead(req, res, next) {
 
 /**
  * DELETE /api/leads/:id
+ * Scoped to authenticated user
  */
 function deleteLead(req, res, next) {
   try {
+    const userId = req.user.id;
     const { id } = req.params;
+
     const lead = db.prepare('SELECT * FROM leads WHERE id = ?').get(id);
 
     if (!lead) {
       return res.status(404).json({ error: 'Lead not found' });
     }
 
-    db.prepare('DELETE FROM leads WHERE id = ?').run(id);
+    // Authorization check: User cannot delete another user's lead
+    if (lead.user_id !== userId) {
+      return res.status(403).json({ error: 'Access denied. You do not have permission to delete this lead.' });
+    }
+
+    db.prepare('DELETE FROM leads WHERE id = ? AND user_id = ?').run(id, userId);
     res.status(200).json({ message: 'Lead deleted successfully' });
   } catch (err) {
     next(err);
   }
 }
 
-module.exports = { getLeads, getStats, getLeadById, createLead, updateLead, deleteLead };
+module.exports = {
+  getLeads,
+  getStats,
+  getLeadById,
+  createLead,
+  updateLead,
+  deleteLead,
+};

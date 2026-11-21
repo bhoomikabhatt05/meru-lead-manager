@@ -1,6 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { useAuth } from './hooks/useAuth';
 import { useLeads } from './hooks/useLeads';
 import { useToast } from './hooks/useToast';
+import { AuthScreen } from './components/AuthScreen';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { LeadsTable } from './components/LeadsTable';
@@ -15,6 +17,9 @@ import { LEAD_STATUSES, LEAD_SOURCES } from './utils';
 import { leadsApi } from './api/leadsApi';
 
 export default function App() {
+  const { user, loading: authLoading, login, signup, logout } = useAuth();
+  const { toasts, addToast, removeToast } = useToast();
+
   const {
     leads,
     pagination,
@@ -31,8 +36,6 @@ export default function App() {
     refresh,
   } = useLeads();
 
-  const { toasts, addToast, removeToast } = useToast();
-
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'leads'
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -45,8 +48,9 @@ export default function App() {
 
   const searchInputRef = useRef(null);
 
-  // Fetch status counts for sidebar and filters
+  // Fetch status counts for sidebar and filters (only when authenticated)
   const fetchCounts = useCallback(async () => {
+    if (!user) return;
     try {
       const stats = await leadsApi.getStats();
       if (stats && stats.byStatus) {
@@ -55,15 +59,18 @@ export default function App() {
     } catch {
       // Ignore background stats fetch errors
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
-    fetchCounts();
-  }, [fetchCounts, leads]);
+    if (user) {
+      fetchCounts();
+    }
+  }, [fetchCounts, leads, user]);
 
   // Global keyboard shortcuts: 'N' for New Lead, '/' or 'Cmd+K' to focus search
   useEffect(() => {
     function handleKeyDown(e) {
+      if (!user) return;
       const isInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName);
       if (isInput) return;
 
@@ -86,7 +93,7 @@ export default function App() {
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showForm, deletingLead, selectedLead]);
+  }, [user, showForm, deletingLead, selectedLead]);
 
   // ---- Handlers ----
   const handleAddClick = useCallback(() => {
@@ -171,6 +178,42 @@ export default function App() {
     setFilterBatch({ status, source: '', search: '' });
   }, [setFilterBatch]);
 
+  const handleLogout = useCallback(async () => {
+    await logout();
+    addToast('Signed out of Meru CRM', 'info');
+  }, [logout, addToast]);
+
+  // Splash loading screen while checking auth cookie
+  if (authLoading) {
+    return (
+      <div className="auth-splash-screen">
+        <div className="dashboard-spinner" />
+        <p className="loading-text">Connecting to secure Meru CRM workspace…</p>
+      </div>
+    );
+  }
+
+  // Not authenticated: render clean login/signup screen
+  if (!user) {
+    return (
+      <>
+        <AuthScreen
+          onLogin={async (email, pass) => {
+            await login(email, pass);
+            addToast('Welcome back to Meru CRM', 'success');
+            refresh();
+          }}
+          onSignup={async (signupData) => {
+            await signup(signupData);
+            addToast('Account created successfully', 'success');
+            refresh();
+          }}
+        />
+        <ToastList toasts={toasts} onRemove={removeToast} />
+      </>
+    );
+  }
+
   const statusTabItems = ['All', ...LEAD_STATUSES];
 
   return (
@@ -184,6 +227,8 @@ export default function App() {
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         onStatusQuickFilter={handleStatusQuickFilter}
+        user={user}
+        onLogout={handleLogout}
       />
 
       {/* Main Content Area */}
@@ -194,6 +239,8 @@ export default function App() {
           onOpenSidebar={() => setIsSidebarOpen(true)}
           onAddLead={handleAddClick}
           totalLeads={pagination.total}
+          user={user}
+          onLogout={handleLogout}
         />
 
         {/* Scrollable Workspace Container */}

@@ -1,10 +1,12 @@
-import { MenuIcon, PlusIcon } from './Icons';
+import { MenuIcon, PlusIcon, LogOutIcon } from './Icons';
 
 export function Header({
   activeTab,
   onOpenSidebar,
   onAddLead,
   totalLeads = 0,
+  user,
+  onLogout,
 }) {
   const titles = {
     dashboard: {
@@ -18,6 +20,14 @@ export function Header({
   };
 
   const current = titles[activeTab] || titles.dashboard;
+  const initials = user?.name
+    ? user.name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
+    : 'U';
 
   return (
     <header className="app-top-header">
@@ -37,6 +47,23 @@ export function Header({
           <span>New Lead</span>
           <kbd className="header-kbd">N</kbd>
         </button>
+
+        {user && (
+          <div className="header-user-menu">
+            <div className="header-avatar-circle" title={`Logged in as ${user.name} (${user.email})`}>
+              {initials}
+            </div>
+            <button
+              className="btn-header-logout"
+              onClick={onLogout}
+              title="Sign out of Meru CRM"
+              aria-label="Log out"
+            >
+              <LogOutIcon size={14} />
+              <span className="logout-text">Sign Out</span>
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );

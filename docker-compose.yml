@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001"
+    environment:
+      - NODE_ENV=production
+      - PORT=5001
+      - DB_PATH=/app/data/leads.db
+      - JWT_SECRET=meru-docker-production-secret-key-2026
+    volumes:
+      - meru_sqlite_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  meru_sqlite_data:
+    driver: local
