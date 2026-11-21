@@ -123,7 +123,7 @@ meru-lead-manager/
 
 ## API Endpoints
 
-Base URL: `http://localhost:5000/api`
+Base URL: `http://localhost:5001/api`
 
 | Method | Endpoint           | Description                             | Query Params |
 |--------|--------------------|-----------------------------------------|--------------|
@@ -201,7 +201,7 @@ npm run dev       # Development (nodemon, auto-restart)
 npm start         # Production
 ```
 
-Server starts on **http://localhost:5000**
+Server starts on **http://localhost:5001**
 
 ### Start the frontend (in a separate terminal)
 
@@ -221,7 +221,7 @@ The Vite dev server proxies all `/api` requests to the Express server, so no COR
 **`server/.env`** (copy from `.env.example`):
 
 ```env
-PORT=5000               # Express server port
+PORT=5001               # Express server port (5001 avoids macOS AirPlay port 5000 conflict)
 NODE_ENV=development    # 'development' | 'production'
 DB_PATH=./data/leads.db # Path to SQLite database file
 CLIENT_URL=http://localhost:5173  # Frontend origin for CORS
