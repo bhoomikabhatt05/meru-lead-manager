@@ -4,10 +4,19 @@ import { StatusBadge } from './StatusBadge';
 import { ArrowUpRight, BuildingIcon, PlusIcon } from './Icons';
 
 const STATUS_CONFIG = {
-  New: { label: 'New', color: '#3b82f6', bg: '#eff6ff', border: '#bfdbfe' },
-  Contacted: { label: 'Contacted', color: '#f59e0b', border: '#fef08a' },
-  Qualified: { label: 'Qualified', color: '#10b981', border: '#bbf7d0' },
-  Lost: { label: 'Lost', color: '#ef4444', border: '#fecaca' },
+  New: { label: 'New', color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
+  Contacted: { label: 'Contacted', color: '#d97706', bg: '#fefce8', border: '#fef08a' },
+  Qualified: { label: 'Qualified', color: '#059669', bg: '#ecfdf5', border: '#bbf7d0' },
+  Lost: { label: 'Lost', color: '#e11d48', bg: '#fff1f2', border: '#fecaca' },
+};
+
+const SOURCE_COLORS = {
+  Website: '#2563eb',
+  Referral: '#0284c7',
+  'Social Media': '#475569',
+  'Email Campaign': '#0f766e',
+  'Cold Call': '#d97706',
+  Other: '#52525b',
 };
 
 const ORDERED_STATUSES = ['New', 'Contacted', 'Qualified', 'Lost'];
@@ -401,12 +410,7 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead, onSelectLe
                         className="source-progress-fill"
                         style={{
                           width: `${percent}%`,
-                          backgroundColor:
-                            source === 'Website' ? '#4f46e5' :
-                            source === 'Referral' ? '#0ea5e9' :
-                            source === 'Social Media' ? '#8b5cf6' :
-                            source === 'Email Campaign' ? '#06b6d4' :
-                            source === 'Cold Call' ? '#f59e0b' : '#64748b'
+                          backgroundColor: SOURCE_COLORS[source] || '#52525b',
                         }}
                       />
                     </div>
