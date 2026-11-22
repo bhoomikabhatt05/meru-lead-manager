@@ -6,9 +6,15 @@ A production-grade, full-stack CRM Lead Manager application built for the **Meru
 
 ---
 
-## 1. Project Overview
+## 1. Project Overview & Problem Solved
 
-Meru Lead Manager is an intentional, high-density B2B sales pipeline CRM inspired by Linear, Attio, and Apple Human Interface Guidelines. It manages the entire lead lifecycle—from capture and qualification to conversion or loss—while providing real-time pipeline analytics, direct manipulation controls, progressive disclosure drawers, and authenticated multi-tenant user isolation.
+Managing prospective sales pipelines in modern B2B SaaS workflows often suffers from fragmented spreadsheets, sluggish interfaces, and generic templates that obscure critical lead progression metrics.
+
+**Meru Lead Manager** solves this by providing a streamlined, high-density sales workbench engineered for deal momentum:
+- **Zero-lag Lead Capture & Organization:** Instant tracking of prospective client leads with required contact attributes, acquisition channels, and pipeline statuses (`New`, `Contacted`, `Qualified`, `Lost`).
+- **Real-time Pipeline Telemetry:** High-visibility dashboard metrics, progression funnels, and channel performance that update dynamically as leads move through milestones.
+- **Progressive Disclosure & Direct Manipulation:** Slide-over detail drawers and one-click status transitions that keep sales reps in their workflow without navigating away.
+- **Strict Multi-Tenant Isolation:** Guaranteed privacy and data segmentation so every user securely manages only their own accounts in durable SQLite storage.
 
 ---
 
@@ -362,6 +368,10 @@ Vite bundles the frontend into `client/dist`. In production (`NODE_ENV=productio
 
 > [!IMPORTANT]
 > Standard container deployments (like free-tier Heroku or basic serverless) use ephemeral filesystems where SQLite databases are wiped on redeploys. To maintain durable persistence, Meru Lead Manager must be deployed with a mounted persistent disk volume.
+
+#### Deployment Status
+- **Current Status:** Local & Docker production builds verified. Live cloud hosting remains optional and is uncompleted (zero external cloud fees incurred).
+- **Deployment-Ready Config:** Declarative configurations for **Render Blueprint** (`render.yaml`) and **Docker Compose** (`docker-compose.yml`) are fully authored with persistent volume mounts (`/var/data/leads.db`). Connecting the GitHub repository to Render or running `docker compose up` spins up a production instance immediately.
 
 #### Option A: Render.com (Recommended with Blueprint)
 A production Blueprint is included in `render.yaml`.
