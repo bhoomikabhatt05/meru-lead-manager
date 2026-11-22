@@ -98,179 +98,231 @@ export function AuthScreen({ onLogin, onSignup }) {
   };
 
   return (
-    <div className="auth-viewport-wrapper">
-      <div className="auth-card-container">
-        {/* Brand Header */}
-        <div className="auth-brand-header">
-          <div className="auth-brand-logo">M</div>
-          <h1 className="auth-brand-title">Meru CRM</h1>
-          <p className="auth-brand-subtitle">
-            {mode === 'login'
-              ? 'Sign in to access your isolated sales pipeline'
-              : 'Create your private CRM workspace'}
-          </p>
+    <div className="auth-editorial-viewport">
+      <div className="auth-split-wrapper">
+        {/* Left: Deep Forest Brand Canvas */}
+        <div className="auth-editorial-showcase">
+          <div className="showcase-brand-mark">
+            <div className="showcase-monogram">M</div>
+            <div className="showcase-brand-label">
+              <span className="brand-name">Meru CRM</span>
+              <span className="brand-role">Sales Pipeline Workbench</span>
+            </div>
+          </div>
+
+          <div className="showcase-hero-copy">
+            <h2 className="showcase-headline">
+              Engineered for velocity. Built for deal momentum.
+            </h2>
+            <p className="showcase-manifesto">
+              A bespoke, multi-tenant lead management environment built with zero-lag SQLite persistence, direct pipeline manipulation, and progressive disclosure workflows.
+            </p>
+          </div>
+
+          <div className="showcase-pillars-list">
+            <div className="pillar-item">
+              <span className="pillar-bullet">✦</span>
+              <div className="pillar-text">
+                <strong>Isolated Multi-Tenant Security:</strong> Every user’s leads are strictly bounded and scoped in persistent storage.
+              </div>
+            </div>
+            <div className="pillar-item">
+              <span className="pillar-bullet">✦</span>
+              <div className="pillar-text">
+                <strong>Apple HIG Usability:</strong> Instant direct manipulation, unsaved changes safeguards, and keyboard fluidity.
+              </div>
+            </div>
+            <div className="pillar-item">
+              <span className="pillar-bullet">✦</span>
+              <div className="pillar-text">
+                <strong>Zero Native Build Burden:</strong> Native SQLite performance via standard Node.js architecture.
+              </div>
+            </div>
+          </div>
+
+          <div className="showcase-footer-note">
+            <span>Meru Technosoft Full Stack Assessment • Production Edition</span>
+          </div>
         </div>
 
-        {/* Tab Switcher */}
-        <div className="auth-tabs-group" role="tablist">
-          <button
-            type="button"
-            className={`auth-tab-btn ${mode === 'login' ? 'active' : ''}`}
-            onClick={() => {
-              setMode('login');
-              setErrors({});
-              setServerError('');
-            }}
-            role="tab"
-            aria-selected={mode === 'login'}
-          >
-            Sign In
-          </button>
-          <button
-            type="button"
-            className={`auth-tab-btn ${mode === 'signup' ? 'active' : ''}`}
-            onClick={() => {
-              setMode('signup');
-              setErrors({});
-              setServerError('');
-            }}
-            role="tab"
-            aria-selected={mode === 'signup'}
-          >
-            Create Account
-          </button>
-        </div>
+        {/* Right: Warm Stone Authentication Card */}
+        <div className="auth-editorial-form-panel">
+          <div className="auth-form-card">
+            <div className="auth-form-header">
+              <h1 className="auth-form-title">
+                {mode === 'login' ? 'Sign in to workspace' : 'Create your workspace'}
+              </h1>
+              <p className="auth-form-subtitle">
+                {mode === 'login'
+                  ? 'Access your private sales pipeline and lead telemetry'
+                  : 'Start tracking deals with an isolated multi-tenant ledger'}
+              </p>
+            </div>
 
-        {/* Alert Banner */}
-        {serverError && (
-          <div className="auth-error-banner" role="alert">
-            <span className="auth-error-icon">⚠️</span>
-            <span className="auth-error-text">{serverError}</span>
-          </div>
-        )}
+            {/* Mode Switcher */}
+            <div className="auth-segmented-tabs" role="tablist">
+              <button
+                type="button"
+                className={`auth-segment-btn ${mode === 'login' ? 'active' : ''}`}
+                onClick={() => {
+                  setMode('login');
+                  setErrors({});
+                  setServerError('');
+                }}
+                role="tab"
+                aria-selected={mode === 'login'}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                className={`auth-segment-btn ${mode === 'signup' ? 'active' : ''}`}
+                onClick={() => {
+                  setMode('signup');
+                  setErrors({});
+                  setServerError('');
+                }}
+                role="tab"
+                aria-selected={mode === 'signup'}
+              >
+                Create Account
+              </button>
+            </div>
 
-        {/* Auth Form */}
-        <form onSubmit={handleSubmit} noValidate className="auth-form-body">
-          {mode === 'signup' && (
-            <div className="auth-field-group">
-              <label className="auth-field-label" htmlFor="auth-name">
-                Full Name
-              </label>
-              <div className="auth-input-wrap">
-                <UserIcon size={14} className="auth-leading-icon" />
-                <input
-                  id="auth-name"
-                  name="name"
-                  type="text"
-                  placeholder="Maya Sharma"
-                  className={`auth-input-field ${errors.name ? 'input-error' : ''}`}
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  autoComplete="name"
-                />
+            {/* Alert Banner */}
+            {serverError && (
+              <div className="auth-error-banner" role="alert">
+                <span className="auth-error-icon">⚠️</span>
+                <span className="auth-error-text">{serverError}</span>
               </div>
-              {errors.name && <span className="auth-field-error">{errors.name}</span>}
-            </div>
-          )}
-
-          <div className="auth-field-group">
-            <label className="auth-field-label" htmlFor="auth-email">
-              Work Email
-            </label>
-            <div className="auth-input-wrap">
-              <MailIcon size={14} className="auth-leading-icon" />
-              <input
-                id="auth-email"
-                name="email"
-                type="email"
-                placeholder="maya@company.com"
-                className={`auth-input-field ${errors.email ? 'input-error' : ''}`}
-                value={formData.email}
-                onChange={handleInputChange}
-                autoComplete="email"
-              />
-            </div>
-            {errors.email && <span className="auth-field-error">{errors.email}</span>}
-          </div>
-
-          <div className="auth-field-group">
-            <label className="auth-field-label" htmlFor="auth-password">
-              Password
-            </label>
-            <div className="auth-input-wrap">
-              <LockIcon size={14} className="auth-leading-icon" />
-              <input
-                id="auth-password"
-                name="password"
-                type="password"
-                placeholder="••••••••••••"
-                className={`auth-input-field ${errors.password ? 'input-error' : ''}`}
-                value={formData.password}
-                onChange={handleInputChange}
-                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-              />
-            </div>
-            {errors.password && <span className="auth-field-error">{errors.password}</span>}
-          </div>
-
-          {mode === 'signup' && (
-            <div className="auth-field-group">
-              <label className="auth-field-label" htmlFor="auth-confirm-password">
-                Confirm Password
-              </label>
-              <div className="auth-input-wrap">
-                <LockIcon size={14} className="auth-leading-icon" />
-                <input
-                  id="auth-confirm-password"
-                  name="confirmPassword"
-                  type="password"
-                  placeholder="••••••••••••"
-                  className={`auth-input-field ${errors.confirmPassword ? 'input-error' : ''}`}
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  autoComplete="new-password"
-                />
-              </div>
-              {errors.confirmPassword && (
-                <span className="auth-field-error">{errors.confirmPassword}</span>
-              )}
-            </div>
-          )}
-
-          <button type="submit" className="btn-auth-submit" disabled={loading}>
-            {loading ? (
-              <>
-                <span className="btn-spinner" />
-                <span>{mode === 'login' ? 'Signing in…' : 'Creating account…'}</span>
-              </>
-            ) : mode === 'login' ? (
-              'Sign In to Dashboard'
-            ) : (
-              'Create My Workspace'
             )}
-          </button>
-        </form>
 
-        {/* Demo Account Quick Access */}
-        <div className="auth-divider">
-          <span>OR QUICK ACCESS</span>
-        </div>
+            {/* Form */}
+            <form onSubmit={handleSubmit} noValidate className="auth-form-body">
+              {mode === 'signup' && (
+                <div className="auth-field-group">
+                  <label className="auth-field-label" htmlFor="auth-name">
+                    Full Name
+                  </label>
+                  <div className="auth-input-wrap">
+                    <UserIcon size={14} className="auth-leading-icon" />
+                    <input
+                      id="auth-name"
+                      name="name"
+                      type="text"
+                      placeholder="Maya Sharma"
+                      className={`auth-input-field ${errors.name ? 'input-error' : ''}`}
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      autoComplete="name"
+                    />
+                  </div>
+                  {errors.name && <span className="auth-field-error">{errors.name}</span>}
+                </div>
+              )}
 
-        <button
-          type="button"
-          className="btn-demo-account"
-          onClick={handleDemoLogin}
-          disabled={loading}
-          title="Sign in with pre-seeded demo user (demo@merucrm.com)"
-        >
-          <span className="demo-badge">1-Click</span>
-          <span>Open Seeded Demo Account (11 Leads)</span>
-        </button>
+              <div className="auth-field-group">
+                <label className="auth-field-label" htmlFor="auth-email">
+                  Work Email
+                </label>
+                <div className="auth-input-wrap">
+                  <MailIcon size={14} className="auth-leading-icon" />
+                  <input
+                    id="auth-email"
+                    name="email"
+                    type="email"
+                    placeholder="maya@company.com"
+                    className={`auth-input-field ${errors.email ? 'input-error' : ''}`}
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    autoComplete="email"
+                  />
+                </div>
+                {errors.email && <span className="auth-field-error">{errors.email}</span>}
+              </div>
 
-        {/* Security & Isolation Callout */}
-        <div className="auth-isolation-notice">
-          <CheckIcon size={13} className="text-emerald" />
-          <span>Multi-tenant data isolation: Each user only sees their own leads.</span>
+              <div className="auth-field-group">
+                <label className="auth-field-label" htmlFor="auth-password">
+                  Password
+                </label>
+                <div className="auth-input-wrap">
+                  <LockIcon size={14} className="auth-leading-icon" />
+                  <input
+                    id="auth-password"
+                    name="password"
+                    type="password"
+                    placeholder="••••••••••••"
+                    className={`auth-input-field ${errors.password ? 'input-error' : ''}`}
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                  />
+                </div>
+                {errors.password && <span className="auth-field-error">{errors.password}</span>}
+              </div>
+
+              {mode === 'signup' && (
+                <div className="auth-field-group">
+                  <label className="auth-field-label" htmlFor="auth-confirm-password">
+                    Confirm Password
+                  </label>
+                  <div className="auth-input-wrap">
+                    <LockIcon size={14} className="auth-leading-icon" />
+                    <input
+                      id="auth-confirm-password"
+                      name="confirmPassword"
+                      type="password"
+                      placeholder="••••••••••••"
+                      className={`auth-input-field ${errors.confirmPassword ? 'input-error' : ''}`}
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      autoComplete="new-password"
+                    />
+                  </div>
+                  {errors.confirmPassword && (
+                    <span className="auth-field-error">{errors.confirmPassword}</span>
+                  )}
+                </div>
+              )}
+
+              <button type="submit" className="btn-forest-submit" disabled={loading}>
+                {loading ? (
+                  <>
+                    <span className="btn-spinner" />
+                    <span>{mode === 'login' ? 'Signing in…' : 'Creating workspace…'}</span>
+                  </>
+                ) : mode === 'login' ? (
+                  'Sign In to Pipeline'
+                ) : (
+                  'Create My Workspace'
+                )}
+              </button>
+            </form>
+
+            {/* Quick Demo Access */}
+            <div className="auth-divider">
+              <span>OR EVALUATE DEMONSTRATION DATA</span>
+            </div>
+
+            <button
+              type="button"
+              className="btn-demo-warm"
+              onClick={handleDemoLogin}
+              disabled={loading}
+              title="Sign in with pre-seeded demo user (demo@merucrm.com)"
+            >
+              <div className="demo-warm-left">
+                <span className="demo-kicker">1-CLICK DEMO</span>
+                <span className="demo-account-label">Open Seeded Account (11 Leads)</span>
+              </div>
+              <span className="demo-warm-arrow">→</span>
+            </button>
+
+            <div className="auth-security-badge">
+              <CheckIcon size={13} className="security-icon" />
+              <span>Multi-tenant data isolation: Each user only accesses their own leads.</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

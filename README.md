@@ -12,7 +12,25 @@ Meru Lead Manager is an intentional, high-density B2B sales pipeline CRM inspire
 
 ---
 
-## 2. Features
+## 2. Visual Experience & Art Direction
+
+Meru CRM features a custom, human-designed art direction built around:
+- **Deep Forest Green** (`#122218`, `#172b1f`, `#1c3325`) for command surfaces, navigation shell, and pipeline velocity telemetry.
+- **Warm Stone Canvas** (`#f4f0e8`, `#eae4d8`, `#fcfbf8`) providing a warm, tactile, paper-like surface that avoids harsh white backgrounds.
+- **Muted Sage Accents** (`#6b8871`, `#8ba591`, `#e6ede7`) for conversion metrics and interactive status indicators.
+- **Deliberate Pipeline Status Palette**: Slate Azure for `New`, Warm Ochre for `Contacted`, Pine Emerald for `Qualified`, and Terracotta for `Lost`.
+
+| Interface View | Description | Screenshot |
+|---|---|---|
+| **Pipeline Intelligence Dashboard** | Real-time deal flow telemetry, pipeline velocity banner, interactive 4-stage stepper, SVG donut distribution, channel performance, and recent activity ledger. | ![Dashboard](screenshots/02-dashboard-demo-leads.png) |
+| **Sales Workbench (Leads Ledger)** | High-density sortable table with multi-field search, segmented status tabs, acquisition channel filter, inline status badges, and quick actions. | ![Leads Workbench](screenshots/04-leads-workbench.png) |
+| **Progressive Disclosure Drawer** | Slide-over inspection sheet featuring instant direct-manipulation status changer, click-to-copy contact details, notes context, and system record timestamps. | ![Lead Drawer](screenshots/05-lead-detail-drawer.png) |
+| **Zero-State Pipeline** | Dedicated empty state for new accounts with clear guidance and 1-click lead creation. | ![Zero State](screenshots/03-dashboard-zero-leads.png) |
+| **Editorial Authentication** | Split layout with brand manifesto and architectural pillars on the left and warm stone sign-in/sign-up form on the right. | ![Auth Screen](screenshots/01-auth-screen.png) |
+
+---
+
+## 3. Features
 
 ### Core Requirements (Mandatory)
 - ✅ **Add Leads:** Capture `name`, `email`, `phone`, `company`, `source` (dropdown), `status` (`New`, `Contacted`, `Qualified`, `Lost`), and optional `notes`.
@@ -43,7 +61,7 @@ Meru Lead Manager is an intentional, high-density B2B sales pipeline CRM inspire
 
 ---
 
-## 3. Technology Stack
+## 4. Technology Stack
 
 | Layer | Technology | Details |
 |---|---|---|
@@ -58,7 +76,7 @@ Meru Lead Manager is an intentional, high-density B2B sales pipeline CRM inspire
 
 ---
 
-## 4. Frontend & Backend Architecture
+## 5. Frontend & Backend Architecture
 
 ```
 meru-lead-manager/
@@ -126,7 +144,7 @@ meru-lead-manager/
 
 ---
 
-## 5. Database Schema & Migration
+## 6. Database Schema & Migration
 
 ### Schema Diagram
 
@@ -173,7 +191,7 @@ The database initializer automatically inspects `PRAGMA table_info(leads)`:
 
 ---
 
-## 6. Authentication Design
+## 7. Authentication Design
 
 1. **Password Hashing:** Passwords are salted and hashed using `bcryptjs` with 10 rounds. Password hashes are never returned across API boundaries.
 2. **Session Storage:** A signed JSON Web Token (JWT) is issued upon signup/login and transmitted via an `httpOnly`, `sameSite: 'lax'` cookie. This protects tokens against XSS attacks.
@@ -182,7 +200,7 @@ The database initializer automatically inspects `PRAGMA table_info(leads)`:
 
 ---
 
-## 7. API Endpoint Documentation
+## 8. API Endpoint Documentation
 
 Base URL: `http://localhost:5001/api`
 
@@ -209,7 +227,7 @@ Base URL: `http://localhost:5001/api`
 
 ---
 
-## 8. Local Setup Instructions
+## 9. Local Setup Instructions
 
 ### Prerequisites
 - **Node.js:** Node.js 22.5.0+ (Tested on **Node.js 24.19.0**)
@@ -252,7 +270,7 @@ Open **http://localhost:5173** in your browser.
 
 ---
 
-## 9. Environment Variables
+## 10. Environment Variables
 
 | Variable | Default Value | Description |
 |---|---|---|
@@ -264,7 +282,7 @@ Open **http://localhost:5173** in your browser.
 
 ---
 
-## 10. Automated Testing
+## 11. Automated Testing
 
 Run the complete test suite:
 ```bash
@@ -332,7 +350,7 @@ Tests:       36 passed, 36 total (100% passing)
 
 ---
 
-## 11. Production Build & Deployment
+## 12. Production Build & Deployment
 
 ### Production Build
 ```bash
@@ -361,7 +379,7 @@ The database persists inside the named volume `meru_sqlite_data`.
 
 ---
 
-## 12. Assumptions Made
+## 13. Assumptions Made
 
 1. **Email Uniqueness per Database:** To prevent ambiguous contact records across common outreach tools, lead emails are unique.
 2. **Assignment Status Alignment:** Lead statuses strictly adhere to the assignment specification: `New`, `Contacted`, `Qualified`, and `Lost`.
@@ -370,7 +388,7 @@ The database persists inside the named volume `meru_sqlite_data`.
 
 ---
 
-## 13. Future Improvements (With More Time)
+## 14. Future Improvements (With More Time)
 
 1. **CSV / Excel Bulk Import & Export:** Enabling one-click export and bulk CSV upload.
 2. **Activity Timeline & Audit Log:** Tracking timestamps when a lead moves across pipeline stages.
@@ -379,7 +397,7 @@ The database persists inside the named volume `meru_sqlite_data`.
 
 ---
 
-## 14. An Interesting Technical Challenge & Solution
+## 15. An Interesting Technical Challenge & Solution
 
 > Selecting Node.js's native `node:sqlite` module was one of the most rewarding architecture choices of this project. While legacy libraries like `better-sqlite3` require compiling native C++ addons via `node-gyp` (which frequently fails on modern Node.js v24 due to Clang C++20 header incompatibilities), `node:sqlite` provided identical synchronous prepared-statement performance with zero native build dependencies. Implementing multi-tenant data isolation required ensuring every single query—from pagination counts and multi-column searches to dashboard aggregations and record updates—strictly bound `user_id = req.user.id`. Verifying this through 17 dedicated authorization tests confirmed that data leaks between users are completely eliminated at the query level.
 

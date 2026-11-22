@@ -10,12 +10,14 @@ export function Header({
 }) {
   const titles = {
     dashboard: {
-      title: 'Sales Dashboard',
-      subtitle: 'Real-time performance metrics and pipeline conversion analysis',
+      category: 'Pipeline Intelligence',
+      title: 'Deal Flow Telemetry',
+      subtitle: 'Real-time performance metrics and stage progression velocity',
     },
     leads: {
-      title: 'Lead Management',
-      subtitle: `${totalLeads} total records in pipeline • Filter, search, and update accounts`,
+      category: 'Sales Workbench',
+      title: 'Lead Management Ledger',
+      subtitle: `${totalLeads} total records in pipeline • Filter, search, and advance stage accounts`,
     },
   };
 
@@ -36,14 +38,18 @@ export function Header({
           <MenuIcon size={20} />
         </button>
         <div className="header-titles">
-          <h1 className="header-page-title">{current.title}</h1>
+          <div className="header-breadcrumb">
+            <span className="breadcrumb-category">{current.category}</span>
+            <span className="breadcrumb-separator">/</span>
+            <span className="breadcrumb-current">{current.title}</span>
+          </div>
           <p className="header-page-subtitle">{current.subtitle}</p>
         </div>
       </div>
 
       <div className="header-right">
-        <button className="btn-primary-lead" onClick={onAddLead}>
-          <PlusIcon size={16} />
+        <button type="button" className="btn-primary-lead" onClick={onAddLead}>
+          <PlusIcon size={15} />
           <span>New Lead</span>
           <kbd className="header-kbd">N</kbd>
         </button>
@@ -54,12 +60,13 @@ export function Header({
               {initials}
             </div>
             <button
+              type="button"
               className="btn-header-logout"
               onClick={onLogout}
               title="Sign out of Meru CRM"
               aria-label="Log out"
             >
-              <LogOutIcon size={14} />
+              <LogOutIcon size={13} />
               <span className="logout-text">Sign Out</span>
             </button>
           </div>

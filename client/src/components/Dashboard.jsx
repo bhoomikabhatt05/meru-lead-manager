@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { leadsApi } from '../api/leadsApi';
 import { StatusBadge } from './StatusBadge';
-import { ArrowUpRight, BuildingIcon, PlusIcon } from './Icons';
+import { ArrowUpRight, BuildingIcon, PlusIcon, ChevronRight } from './Icons';
 
 const STATUS_CONFIG = {
   New: { label: 'New', color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
@@ -58,7 +58,7 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead, onSelectLe
     return (
       <div className="dashboard-loading-state">
         <div className="dashboard-spinner" />
-        <p className="loading-text">Loading sales analytics & pipeline metrics…</p>
+        <p className="loading-text">Loading pipeline telemetry & deal flow…</p>
       </div>
     );
   }
@@ -68,7 +68,7 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead, onSelectLe
       <div className="dashboard-error-banner">
         <span className="error-icon">⚠️</span>
         <div>
-          <h4 className="error-title">Unable to load dashboard</h4>
+          <h4 className="error-title">Unable to load pipeline metrics</h4>
           <p className="error-message">{error}</p>
         </div>
       </div>
@@ -110,7 +110,6 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead, onSelectLe
     };
   });
 
-  // Direct manipulation helper for KPI navigation
   const handleKpiClick = (statusFilter = '') => {
     if (onNavigateToLeads) {
       onNavigateToLeads({ status: statusFilter, source: '', search: '' });
@@ -125,164 +124,156 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead, onSelectLe
 
   return (
     <div className="dashboard-container">
-      {/* KPI Highlight Cards - Fully Interactive per Apple HIG */}
-      <div className="kpi-grid">
-        {/* Card 1: Total Leads */}
-        <div
-          className="kpi-card highlight interactive"
-          onClick={() => handleKpiClick('')}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleKpiClick('')}
-          role="button"
-          tabIndex={0}
-          aria-label={`Total leads: ${total}. Click to view all leads with filters cleared.`}
-          title="Click to view all leads"
-        >
-          <div className="kpi-header">
-            <span className="kpi-label">TOTAL LEADS</span>
-            <span className="kpi-action-hint">View all →</span>
+      {/* 1. Master Pipeline Flow & Health Banner */}
+      <section className="pipeline-hero-banner" aria-label="Pipeline overview">
+        {/* Left: Headline Metric & Velocity */}
+        <div className="hero-metric-block">
+          <div className="hero-kicker">
+            <span className="hero-kicker-dot" />
+            <span>SALES PIPELINE TELEMETRY</span>
           </div>
-          <div className="kpi-value-wrap">
-            <span className="kpi-value">{total}</span>
-            <span className="kpi-subtext">{activePipelineCount} active in pipeline</span>
-          </div>
-          <div className="kpi-progress-bar">
-            <div className="kpi-progress-fill" style={{ width: `${Math.min(100, (total / 20) * 100)}%` }} />
-          </div>
-        </div>
-
-        {/* Card 2: New Leads */}
-        <div
-          className="kpi-card interactive"
-          onClick={() => handleKpiClick('New')}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleKpiClick('New')}
-          role="button"
-          tabIndex={0}
-          aria-label={`New leads: ${newCount}. Click to view new leads.`}
-          title="Click to filter by New status"
-        >
-          <div className="kpi-header">
-            <span className="kpi-label">NEW LEADS</span>
-            <span className="status-pill-indicator new">New</span>
-          </div>
-          <div className="kpi-value-wrap">
-            <span className="kpi-value text-blue">{newCount}</span>
-            <span className="kpi-subtext">Needs initial review</span>
-          </div>
-          <div className="kpi-sub-meter">
-            <span className="meter-label">Share of pipeline</span>
-            <span className="meter-value">{total > 0 ? Math.round((newCount / total) * 100) : 0}%</span>
-          </div>
-        </div>
-
-        {/* Card 3: Contacted */}
-        <div
-          className="kpi-card interactive"
-          onClick={() => handleKpiClick('Contacted')}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleKpiClick('Contacted')}
-          role="button"
-          tabIndex={0}
-          aria-label={`Contacted leads: ${contactedCount}. Click to view contacted leads.`}
-          title="Click to filter by Contacted status"
-        >
-          <div className="kpi-header">
-            <span className="kpi-label">CONTACTED</span>
-            <span className="status-pill-indicator contacted">Contacted</span>
-          </div>
-          <div className="kpi-value-wrap">
-            <span className="kpi-value text-amber">{contactedCount}</span>
-            <span className="kpi-subtext">Discovery ongoing</span>
-          </div>
-          <div className="kpi-sub-meter">
-            <span className="meter-label">Share of pipeline</span>
-            <span className="meter-value">{total > 0 ? Math.round((contactedCount / total) * 100) : 0}%</span>
-          </div>
-        </div>
-
-        {/* Card 4: Qualified */}
-        <div
-          className="kpi-card interactive"
-          onClick={() => handleKpiClick('Qualified')}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleKpiClick('Qualified')}
-          role="button"
-          tabIndex={0}
-          aria-label={`Qualified leads: ${qualifiedCount}. Click to view qualified leads.`}
-          title="Click to filter by Qualified status"
-        >
-          <div className="kpi-header">
-            <span className="kpi-label">QUALIFIED</span>
-            <span className="status-pill-indicator qualified">Qualified</span>
-          </div>
-          <div className="kpi-value-wrap">
-            <span className="kpi-value text-emerald">{qualifiedCount}</span>
-            <span className="kpi-subtext">Ready for proposal</span>
-          </div>
-          <div className="kpi-sub-meter">
-            <span className="meter-label">Conversion Rate</span>
-            <span className="meter-value text-emerald">{qualifiedRate}%</span>
-          </div>
-        </div>
-
-        {/* Card 5: Lost */}
-        <div
-          className="kpi-card interactive"
-          onClick={() => handleKpiClick('Lost')}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleKpiClick('Lost')}
-          role="button"
-          tabIndex={0}
-          aria-label={`Lost leads: ${lostCount}. Click to view lost leads.`}
-          title="Click to filter by Lost status"
-        >
-          <div className="kpi-header">
-            <span className="kpi-label">LOST</span>
-            <span className="status-pill-indicator lost">Lost</span>
-          </div>
-          <div className="kpi-value-wrap">
-            <span className="kpi-value text-rose">{lostCount}</span>
-            <span className="kpi-subtext">Disqualified / closed</span>
-          </div>
-          <div className="kpi-sub-meter">
-            <span className="meter-label">Loss Rate</span>
-            <span className="meter-value text-rose">{total > 0 ? Math.round((lostCount / total) * 100) : 0}%</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Analytics Visualizations Grid */}
-      <div className="analytics-grid">
-        {/* Status Distribution Donut Chart - Clickable Segments & Legend */}
-        <div className="analytics-card">
-          <div className="card-top-bar">
-            <div>
-              <h3 className="card-title">Status Distribution</h3>
-              <p className="card-subtitle">Click any segment or stage to filter the pipeline</p>
+          <div className="hero-value-row">
+            <span className="hero-large-number">{total}</span>
+            <div className="hero-sub-stats">
+              <span className="hero-stat-primary">{activePipelineCount} Active In Discussion</span>
+              <span className="hero-conversion-badge">{qualifiedRate}% Conversion to Qualified</span>
             </div>
-            <span className="card-badge">{total} Leads</span>
+          </div>
+          <button
+            type="button"
+            className="hero-view-all-btn"
+            onClick={() => handleKpiClick('')}
+          >
+            <span>Open All Pipeline Leads</span>
+            <ArrowUpRight size={13} />
+          </button>
+        </div>
+
+        {/* Right: Flow Funnel Stepper (Interactive Direct Manipulation) */}
+        <div className="pipeline-flow-funnel">
+          <div className="funnel-header-label">DEAL PROGRESSION STAGES (CLICK TO FILTER)</div>
+          <div className="funnel-steps-track">
+            {/* Stage 1: New */}
+            <div
+              className="funnel-step-card stage-new"
+              onClick={() => handleKpiClick('New')}
+              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleKpiClick('New')}
+              role="button"
+              tabIndex={0}
+              aria-label={`New leads: ${newCount}. Click to filter.`}
+              title="Click to view New leads"
+            >
+              <div className="step-indicator-row">
+                <span className="step-dot" style={{ backgroundColor: '#2563eb' }} />
+                <span className="step-name">New</span>
+                <span className="step-share">{total > 0 ? Math.round((newCount / total) * 100) : 0}%</span>
+              </div>
+              <div className="step-count-val">{newCount}</div>
+              <div className="step-desc">Awaiting first contact</div>
+            </div>
+
+            <span className="funnel-arrow">→</span>
+
+            {/* Stage 2: Contacted */}
+            <div
+              className="funnel-step-card stage-contacted"
+              onClick={() => handleKpiClick('Contacted')}
+              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleKpiClick('Contacted')}
+              role="button"
+              tabIndex={0}
+              aria-label={`Contacted leads: ${contactedCount}. Click to filter.`}
+              title="Click to view Contacted leads"
+            >
+              <div className="step-indicator-row">
+                <span className="step-dot" style={{ backgroundColor: '#d97706' }} />
+                <span className="step-name">Contacted</span>
+                <span className="step-share">{total > 0 ? Math.round((contactedCount / total) * 100) : 0}%</span>
+              </div>
+              <div className="step-count-val">{contactedCount}</div>
+              <div className="step-desc">Discovery in progress</div>
+            </div>
+
+            <span className="funnel-arrow">→</span>
+
+            {/* Stage 3: Qualified */}
+            <div
+              className="funnel-step-card stage-qualified"
+              onClick={() => handleKpiClick('Qualified')}
+              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleKpiClick('Qualified')}
+              role="button"
+              tabIndex={0}
+              aria-label={`Qualified leads: ${qualifiedCount}. Click to filter.`}
+              title="Click to view Qualified leads"
+            >
+              <div className="step-indicator-row">
+                <span className="step-dot" style={{ backgroundColor: '#059669' }} />
+                <span className="step-name">Qualified</span>
+                <span className="step-share highlight">{qualifiedRate}%</span>
+              </div>
+              <div className="step-count-val text-forest">{qualifiedCount}</div>
+              <div className="step-desc">Proposal & closing ready</div>
+            </div>
+
+            <span className="funnel-divider">|</span>
+
+            {/* Stage 4: Lost */}
+            <div
+              className="funnel-step-card stage-lost"
+              onClick={() => handleKpiClick('Lost')}
+              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleKpiClick('Lost')}
+              role="button"
+              tabIndex={0}
+              aria-label={`Lost leads: ${lostCount}. Click to filter.`}
+              title="Click to view Lost leads"
+            >
+              <div className="step-indicator-row">
+                <span className="step-dot" style={{ backgroundColor: '#e11d48' }} />
+                <span className="step-name">Lost</span>
+                <span className="step-share">{total > 0 ? Math.round((lostCount / total) * 100) : 0}%</span>
+              </div>
+              <div className="step-count-val text-terracotta">{lostCount}</div>
+              <div className="step-desc">Disqualified / churned</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 2. Analytical Intelligence Row (Proportional & Visually Integrated) */}
+      <section className="analytics-grid" aria-label="Pipeline charts">
+        {/* Panel 1: Stage Volume & Proportions */}
+        <div className="analytics-panel">
+          <div className="panel-header">
+            <div>
+              <h3 className="panel-title">Stage Distribution</h3>
+              <p className="panel-subtitle">Current volume distribution across sales milestones</p>
+            </div>
+            <span className="panel-tag">{total} Records</span>
           </div>
 
           {total === 0 ? (
-            <div className="chart-empty-state">
-              <span className="empty-icon">📊</span>
-              <p className="empty-text">No leads in pipeline yet</p>
-              <button className="btn-secondary-sm" onClick={onAddLead}>
-                + Add First Lead
+            <div className="panel-empty-box">
+              <span className="empty-symbol">◎</span>
+              <p className="empty-heading">No Deals in Pipeline</p>
+              <p className="empty-caption">
+                Add an inbound inquiry or import demonstration data to visualize stage distribution.
+              </p>
+              <button type="button" className="btn-warm-action" onClick={onAddLead}>
+                <PlusIcon size={14} />
+                <span>Create First Lead</span>
               </button>
             </div>
           ) : (
             <div className="donut-chart-layout">
-              {/* SVG Donut Visual */}
               <div className="donut-visual-container">
                 <svg className="donut-svg" viewBox="0 0 160 160">
-                  {/* Background Track */}
                   <circle
                     cx="80"
                     cy="80"
                     r={radius}
                     fill="transparent"
-                    stroke="#f1f5f9"
-                    strokeWidth="18"
+                    stroke="#e8e3d8"
+                    strokeWidth="16"
                   />
-
-                  {/* Dynamic Arc Segments - Clickable */}
                   {donutSegments.map((seg) => {
                     if (seg.count === 0) return null;
                     const isHovered = activeHoverSlice?.statusKey === seg.statusKey;
@@ -294,7 +285,7 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead, onSelectLe
                         r={radius}
                         fill="transparent"
                         stroke={seg.color}
-                        strokeWidth={isHovered ? 24 : 18}
+                        strokeWidth={isHovered ? 22 : 16}
                         strokeDasharray={seg.strokeDasharray}
                         strokeDashoffset={seg.strokeDashoffset}
                         strokeLinecap="butt"
@@ -309,12 +300,10 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead, onSelectLe
                   })}
                 </svg>
 
-                {/* Donut Center Display */}
                 <div
                   className="donut-center-info interactive-center"
                   onClick={() => handleKpiClick('')}
                   title="Click to view all leads"
-                  style={{ pointerEvents: 'auto', cursor: 'pointer' }}
                 >
                   {activeHoverSlice ? (
                     <>
@@ -334,7 +323,6 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead, onSelectLe
                 </div>
               </div>
 
-              {/* Status Legend List - Clickable */}
               <div className="donut-legend-list">
                 {donutSegments.map((seg) => (
                   <div
@@ -365,20 +353,23 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead, onSelectLe
           )}
         </div>
 
-        {/* Acquisition Sources Bar Chart - Clickable Rows */}
-        <div className="analytics-card">
-          <div className="card-top-bar">
+        {/* Panel 2: Channel Acquisition Performance */}
+        <div className="analytics-panel">
+          <div className="panel-header">
             <div>
-              <h3 className="card-title">Acquisition Channels</h3>
-              <p className="card-subtitle">Click any channel to view leads from that source</p>
+              <h3 className="panel-title">Acquisition Channels</h3>
+              <p className="panel-subtitle">Lead volume generated by acquisition channel</p>
             </div>
-            <span className="card-badge">{bySource.length} Sources</span>
+            <span className="panel-tag">{bySource.length} Active Channels</span>
           </div>
 
           {bySource.length === 0 ? (
-            <div className="chart-empty-state">
-              <span className="empty-icon">🌐</span>
-              <p className="empty-text">No acquisition data available</p>
+            <div className="panel-empty-box">
+              <span className="empty-symbol">☍</span>
+              <p className="empty-heading">No Channel Data</p>
+              <p className="empty-caption">
+                Inbound channels will be tracked and benchmarked as leads enter the pipeline.
+              </p>
             </div>
           ) : (
             <div className="source-bars-container">
@@ -420,25 +411,26 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead, onSelectLe
             </div>
           )}
         </div>
-      </div>
+      </section>
 
-      {/* Recent Leads Activity Section */}
-      <div className="recent-leads-section">
+      {/* 3. Pipeline Deal Ledger & Recent Activity */}
+      <section className="recent-leads-section" aria-label="Recent lead activity">
         <div className="section-header-bar">
           <div>
-            <h3 className="section-heading">Recent Leads</h3>
-            <p className="section-subheading">Latest leads captured across your sales channels</p>
+            <h3 className="section-heading">Recent Deals Ledger</h3>
+            <p className="section-subheading">Latest leads captured across your sales channels (Click row to inspect)</p>
           </div>
-          <button className="btn-link" onClick={() => handleKpiClick('')}>
-            <span>View All Leads</span>
-            <ArrowUpRight size={14} />
+          <button type="button" className="btn-link" onClick={() => handleKpiClick('')}>
+            <span>View Complete Ledger</span>
+            <ArrowUpRight size={13} />
           </button>
         </div>
 
         {recentLeads.length === 0 ? (
           <div className="recent-leads-empty">
-            <p className="empty-note">No recent lead activity yet.</p>
-            <button className="btn-secondary-sm" onClick={onAddLead}>
+            <span className="empty-symbol">✎</span>
+            <p className="empty-note">No recent lead activity recorded.</p>
+            <button type="button" className="btn-warm-action" onClick={onAddLead}>
               <PlusIcon size={14} />
               <span>Add Your First Lead</span>
             </button>
@@ -448,11 +440,11 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead, onSelectLe
             <table className="recent-leads-table">
               <thead>
                 <tr>
-                  <th>Lead Name</th>
+                  <th>Lead & Contact</th>
                   <th>Company</th>
-                  <th>Source</th>
+                  <th>Acquisition Source</th>
                   <th>Status</th>
-                  <th>Date Added</th>
+                  <th>Date Captured</th>
                   <th className="text-right">Action</th>
                 </tr>
               </thead>
@@ -462,7 +454,7 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead, onSelectLe
                     key={lead.id}
                     className="recent-lead-row interactive-row"
                     onClick={() => (onSelectLead ? onSelectLead(lead) : handleKpiClick(''))}
-                    title="Click to view details"
+                    title="Click to view details in drawer"
                   >
                     <td>
                       <div className="lead-identity">
@@ -496,6 +488,7 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead, onSelectLe
                     </td>
                     <td className="text-right" onClick={(e) => e.stopPropagation()}>
                       <button
+                        type="button"
                         className="btn-table-action"
                         onClick={() => onEditLead ? onEditLead(lead) : handleKpiClick('')}
                       >
@@ -508,7 +501,7 @@ export function Dashboard({ onNavigateToLeads, onAddLead, onEditLead, onSelectLe
             </table>
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }
